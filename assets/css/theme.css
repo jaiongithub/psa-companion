@@ -1,0 +1,73 @@
+/* PSA Companion - Theme & Custom Utility Styles */
+
+/* Base Typography & Background */
+body {
+    background-color: #020617;
+    color: #f8fafc;
+    font-family: 'Inter', sans-serif;
+}
+
+code,
+pre,
+.font-mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Custom subtle cyber grid background */
+.cyber-grid {
+    background-size: 32px 32px;
+    background-image:
+        linear-gradient(to right, rgba(30, 41, 59, 0.35) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(30, 41, 59, 0.35) 1px, transparent 1px);
+}
+
+/* Animated dashed connector flow */
+@keyframes dashFlow {
+    to {
+        stroke-dashoffset: -24;
+    }
+}
+
+.animate-flow {
+    stroke-dasharray: 6 6;
+    animation: dashFlow 0.8s linear infinite;
+}
+
+/* Pulse glow for active X-Ray nodes */
+@keyframes nodePulse {
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+    }
+}
+
+.pulse-emerald {
+    animation: nodePulse 1.8s infinite;
+}
+
+/* Traveling Packet Transition */
+#traveling-packet {
+    transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}

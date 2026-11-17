@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PSA Companion // Interactive Learning Cockpit</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            bg: '#020617',
+                            panel: '#0f172a',
+                            card: '#1e293b',
+                            border: '#334155',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="assets/css/theme.css">
+</head>
+
+<body class="min-h-screen flex flex-col cyber-grid selection:bg-emerald-500/30 selection:text-emerald-200">
+
+    <!-- TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 border-b border-slate-800/90 bg-slate-950/90 backdrop-blur-md">
+        <div class="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+            <!-- Brand & Breadcrumb -->
+            <div class="flex items-center gap-3">
+                <a href="index.html" class="flex items-center gap-3 group" title="Return to All Modules">
+                    <div
+                        class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform">
+                        <svg class="w-5 h-5 text-slate-950" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            stroke-width="2.4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                    </div>
+                </a>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <a href="index.html" class="font-bold tracking-tight text-slate-100 hover:text-emerald-400 text-sm sm:text-base transition-colors">
+                            PSA Companion
+                        </a>
+                        <span class="text-slate-600 text-xs">/</span>
+                        <span id="header-module-title" class="font-semibold text-slate-200 text-sm sm:text-base truncate">
+                            Directory & Path Traversal
+                        </span>
+                        <span
+                            class="hidden md:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            ZERO-BACKEND
+                        </span>
+                    </div>
+                    <p id="header-module-tagline" class="text-[11px] text-slate-400 font-mono truncate hidden sm:block">
+                        Arbitrary filesystem access vulnerabilities & path canonicalization flaws
+                    </p>
+                </div>
+            </div>
+
+            <!-- Progress & Controls -->
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- Global Module Progress -->
+                <div class="flex items-center gap-3 bg-slate-900/90 border border-slate-800 px-3 py-1.5 rounded-lg">
+                    <div class="text-right">
+                        <div class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Module Mastery</div>
+                        <div id="global-progress-text" class="text-xs font-mono font-bold text-emerald-400">0 / 6 Labs Ready</div>
+                    </div>
+                    <div class="w-16 sm:w-28 h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div id="global-progress-bar"
+                            class="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 transition-all duration-500"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Backup & Restore Controls -->
+                <div class="flex items-center gap-1">
+                    <button id="export-backup-btn" title="Export Progress Backup (JSON)"
+                        class="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-cyan-300 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                    </button>
+                    <button id="import-backup-btn" title="Import Progress Backup (JSON)"
+                        class="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-cyan-300 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                    </button>
+                    <input type="file" id="import-file-input" accept=".json" class="hidden" />
+
+                    <!-- Reset Progress Button -->
+                    <button id="reset-progress-btn" title="Reset Saved Progress"
+                        class="p-2 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-rose-400 transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN WORKSPACE -->
+    <div class="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT SIDEBAR: COMMON MISSION TARGET ON TOP + LABS SWITCHER -->
+        <aside class="lg:col-span-3 flex flex-col gap-3">
+            <!-- Pinned Common Mission Target Card -->
+            <div id="common-mission-card" class="p-4 rounded-xl bg-slate-900/90 border border-emerald-500/30 shadow-lg shadow-emerald-500/5">
+                <!-- Rendered dynamically -->
+            </div>
+
+            <div class="flex items-center justify-between px-1 mt-1">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">PortSwigger Academy Labs</h2>
+                <span class="text-[11px] font-mono text-slate-500">Numbered Labs</span>
+            </div>
+
+            <!-- Dynamic Lab Switcher List -->
+            <div id="lab-list" class="flex flex-col gap-2">
+                <!-- Populated dynamically -->
+            </div>
+        </aside>
+
+        <!-- RIGHT MAIN CONTENT: 5-STAGE LEARNING FLOW -->
+        <main class="lg:col-span-9 flex flex-col gap-6">
+
+            <!-- LAB HEADER BANNER -->
+            <section class="p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2.5 mb-2">
+                            <span id="lab-badge"
+                                class="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider">APPRENTICE</span>
+                            <span id="lab-number" class="text-xs font-mono text-slate-400">LAB 01 OF 06</span>
+                        </div>
+                        <h1 id="lab-title" class="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                            File path traversal, simple case
+                        </h1>
+                    </div>
+
+                    <!-- Status Pills -->
+                    <div class="flex items-center gap-2">
+                        <div id="status-pill-sandbox"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border bg-slate-950 border-slate-800 text-slate-400">
+                            <span class="w-2 h-2 rounded-full bg-slate-600"></span>
+                            <span>Sandbox: Pending</span>
+                        </div>
+                        <div id="status-pill-quiz"
+                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border bg-slate-950 border-slate-800 text-slate-400">
+                            <span class="w-2 h-2 rounded-full bg-slate-600"></span>
+                            <span>Quiz: 0/2</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STAGE 0: FUNDAMENTALS & NORMAL BEHAVIOR MOTION GRAPHIC -->
+            <section class="p-5 sm:p-6 rounded-2xl bg-slate-900/85 border border-slate-800">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <span
+                            class="w-6 h-6 rounded-md bg-sky-500/15 text-sky-400 border border-sky-500/30 font-mono text-xs font-bold flex items-center justify-center">0</span>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-100">Fundamentals & Normal Application Behavior</h2>
+                            <p class="text-[11px] text-slate-400">Conceptual baseline before inspecting lab-specific filters</p>
+                        </div>
+                    </div>
+                    <button id="fundamentals-toggle-btn"
+                        class="text-xs font-mono text-slate-400 hover:text-slate-200 px-2.5 py-1 rounded bg-slate-950 border border-slate-800 transition-colors">
+                        Collapse Baseline
+                    </button>
+                </div>
+
+                <div id="fundamentals-body" class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-stretch">
+                    <!-- Left 5 Cols: 3 Core Beginner Pillars -->
+                    <div class="xl:col-span-5 flex flex-col justify-between gap-3">
+                        <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/90">
+                            <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-sky-400 mb-1">
+                                01. What is Path Traversal?
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                A filesystem access flaw allowing an attacker to read (or write) arbitrary files outside the web server's intended root directory by manipulating file path references.
+                            </p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/90">
+                            <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400 mb-1">
+                                02. Where is it Usually Found?
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Static asset endpoints (<code class="text-slate-200">?image=</code>), PDF/invoice downloaders (<code class="text-slate-200">?doc=</code>), log viewers, and dynamic template or language selectors.
+                            </p>
+                        </div>
+                        <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/90">
+                            <div class="text-[11px] font-mono font-bold uppercase tracking-wider text-amber-400 mb-1">
+                                03. What Introduces the Flaw?
+                            </div>
+                            <p class="text-xs text-slate-300 leading-relaxed">
+                                Concatenating untrusted user input directly into OS file-reading APIs without canonicalizing the resolved path and verifying it stays inside the base directory.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right 7 Cols: Modular NormalBehaviorMotionGraphic Container -->
+                    <div id="normal-motion-graphic-host"
+                        class="xl:col-span-7 rounded-xl bg-slate-950 border border-slate-800 p-4 flex flex-col justify-between">
+                        <!-- Rendered by ConfinementBoundaryMotionGraphic module -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- STAGE 1: CRISP CONCEPT & UPGRADED MUTATING PACKET PIPELINE -->
+            <section class="p-5 sm:p-6 rounded-2xl bg-slate-900/80 border border-slate-800">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <span
+                            class="w-6 h-6 rounded-md bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-mono text-xs font-bold flex items-center justify-center">1</span>
+                        <h2 class="text-base font-bold text-slate-100">Lab Defense Logic & Live Mutating Packet Trace</h2>
+                    </div>
+                    <button id="trace-packet-btn"
+                        class="text-xs font-mono text-cyan-400 hover:text-cyan-300 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-cyan-950/50 hover:bg-cyan-950 border border-cyan-700/60 transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Trace Packet</span>
+                    </button>
+                </div>
+
+                <!-- Crisp 3-Bullet Explanation -->
+                <ul id="concept-bullets" class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+                    <!-- Populated dynamically -->
+                </ul>
+
+                <!-- Interactive Animated Pipeline Flow Diagram with Traveling Mutating Packet -->
+                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800/90 overflow-x-auto">
+                    <div class="min-w-[680px] relative pt-9 pb-2">
+                        <!-- Traveling Mutating Packet Badge -->
+                        <div id="traveling-packet" style="left: 11%; opacity: 0;"
+                            class="absolute top-0 -translate-x-1/2 z-20 px-2.5 py-1 rounded-md border bg-slate-900 border-cyan-400 text-cyan-300 font-mono text-[10px] font-bold shadow-lg whitespace-nowrap pointer-events-none flex items-center gap-1.5">
+                            <span id="packet-stage-tag" class="px-1 rounded bg-cyan-500/20 text-cyan-300">IN</span>
+                            <span id="packet-payload-label">218.png</span>
+                        </div>
+
+                        <div class="flex items-center justify-between gap-2 relative">
+                            <!-- Node 1: HTTP Input -->
+                            <div id="pipe-node-1"
+                                class="flex-1 p-3 rounded-xl bg-slate-900 border border-slate-700 transition-all duration-300">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-mono uppercase text-cyan-400 font-bold">01. HTTP Query</span>
+                                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+                                </div>
+                                <div id="pipe-val-1" class="font-mono text-xs text-slate-200 truncate">filename=218.png</div>
+                            </div>
+
+                            <!-- Connector 1->2 -->
+                            <svg class="w-8 h-6 shrink-0 text-slate-600" viewBox="0 0 32 24">
+                                <line id="pipe-line-1" x1="0" y1="12" x2="26" y2="12" stroke="currentColor"
+                                    stroke-width="2" class="animate-flow" />
+                                <polygon points="25,8 32,12 25,16" fill="currentColor" />
+                            </svg>
+
+                            <!-- Node 2: App Defense / Decode Layer -->
+                            <div id="pipe-node-2"
+                                class="flex-1 p-3 rounded-xl bg-slate-900 border border-slate-700 transition-all duration-300">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-mono uppercase text-amber-400 font-bold">02. Filter / Decode</span>
+                                    <span id="pipe-badge-2" class="text-[10px] font-mono px-1.5 rounded bg-slate-800 text-slate-300">NONE</span>
+                                </div>
+                                <div id="pipe-val-2" class="font-mono text-xs text-slate-200 truncate">218.png</div>
+                            </div>
+
+                            <!-- Connector 2->3 -->
+                            <svg class="w-8 h-6 shrink-0 text-slate-600" viewBox="0 0 32 24">
+                                <line id="pipe-line-2" x1="0" y1="12" x2="26" y2="12" stroke="currentColor"
+                                    stroke-width="2" class="animate-flow" />
+                                <polygon points="25,8 32,12 25,16" fill="currentColor" />
+                            </svg>
+
+                            <!-- Node 3: Path Concatenation -->
+                            <div id="pipe-node-3"
+                                class="flex-1 p-3 rounded-xl bg-slate-900 border border-slate-700 transition-all duration-300">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-mono uppercase text-purple-400 font-bold">03. Path Join</span>
+                                    <span class="text-[10px] font-mono text-slate-500">BASE + INPUT</span>
+                                </div>
+                                <div id="pipe-val-3" class="font-mono text-xs text-slate-200 truncate">/var/www/images/218.png</div>
+                            </div>
+
+                            <!-- Connector 3->4 -->
+                            <svg class="w-8 h-6 shrink-0 text-slate-600" viewBox="0 0 32 24">
+                                <line id="pipe-line-3" x1="0" y1="12" x2="26" y2="12" stroke="currentColor"
+                                    stroke-width="2" class="animate-flow" />
+                                <polygon points="25,8 32,12 25,16" fill="currentColor" />
+                            </svg>
+
+                            <!-- Node 4: OS Syscall Resolution -->
+                            <div id="pipe-node-4"
+                                class="flex-1 p-3 rounded-xl bg-slate-900 border border-slate-700 transition-all duration-300">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-[10px] font-mono uppercase text-emerald-400 font-bold">04. OS Syscall open()</span>
+                                    <span id="pipe-status-4"
+                                        class="text-[10px] font-mono px-1.5 rounded bg-emerald-500/20 text-emerald-300">200 OK</span>
+                                </div>
+                                <div id="pipe-val-4" class="font-mono text-xs text-slate-200 truncate">/var/www/images/218.png</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STAGE 2: X-RAY BROWSER SANDBOX -->
+            <section class="p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div class="flex items-center gap-2.5">
+                        <span
+                            class="w-6 h-6 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono text-xs font-bold flex items-center justify-center">2</span>
+                        <h2 class="text-base font-bold text-slate-100">X-Ray Browser Sandbox & Virtual Filesystem</h2>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <button id="hint-toggle-btn"
+                            class="px-3 py-1.5 rounded-lg text-xs font-mono bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                            </svg>
+                            <span>Show Tactical Hint</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Collapsible Tactical Hint Box -->
+                <div id="hint-box"
+                    class="hidden mb-4 p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200/90 flex items-start gap-2.5">
+                    <span class="font-mono font-bold text-amber-400 shrink-0">[HINT]</span>
+                    <p id="hint-text" class="leading-relaxed"></p>
+                </div>
+
+                <!-- Interactive HTTP Request Builder Bar -->
+                <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 mb-5">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <div
+                            class="flex items-center bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 flex-1 focus-within:border-emerald-500 transition-colors">
+                            <span class="text-xs font-mono font-bold text-emerald-400 mr-2 select-none">GET</span>
+                            <span class="text-xs font-mono text-slate-400 select-none">/image?filename=</span>
+                            <input id="payload-input" type="text" value="218.png" autocomplete="off" spellcheck="false"
+                                placeholder="Enter payload (e.g., ../../../etc/passwd)"
+                                class="bg-transparent border-none outline-none text-xs sm:text-sm font-mono text-white flex-1 min-w-0 ml-0.5" />
+                            <span class="hidden md:inline text-xs font-mono text-slate-500 ml-2 select-none">HTTP/1.1</span>
+                        </div>
+
+                        <button id="send-request-btn"
+                            class="px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 active:bg-emerald-600 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 shrink-0">
+                            <span>Send Request</span>
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Quick Conceptual Probe Tokens -->
+                    <div class="mt-3 flex flex-wrap items-center gap-1.5">
+                        <span class="text-[11px] font-mono text-slate-500 mr-1">Conceptual Vectors:</span>
+                        <div id="probe-chips" class="flex flex-wrap gap-1.5">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPLIT-PANE X-RAY VIEW -->
+                <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+
+                    <!-- LEFT PANE (7 cols): Simulated Backend Code + Step-by-Step Transformation Trace -->
+                    <div class="xl:col-span-7 flex flex-col gap-4">
+                        <!-- Backend Source Code with Live Line Highlighting -->
+                        <div class="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
+                            <div
+                                class="px-3.5 py-2 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500/70"></span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500/70"></span>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/70"></span>
+                                    <span id="backend-filename" class="ml-1 text-xs font-mono text-slate-300">image_loader.py</span>
+                                </div>
+                                <span class="text-[10px] font-mono uppercase tracking-wider text-cyan-400">Server-Side X-Ray</span>
+                            </div>
+                            <div id="backend-code-view" class="p-3.5 font-mono text-xs leading-6 overflow-x-auto">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Step-by-Step String Transformation Trace -->
+                        <div class="rounded-xl bg-slate-950 border border-slate-800 p-4">
+                            <div
+                                class="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+                                <span>String Transformation Trace</span>
+                                <span id="trace-verdict-badge" class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300">NORMAL REQUEST</span>
+                            </div>
+                            <div id="transformation-steps" class="space-y-2">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT PANE (5 cols): Virtual POSIX Filesystem & Response Viewer -->
+                    <div class="xl:col-span-5 flex flex-col gap-4">
+                        <!-- Virtual Filesystem Tree -->
+                        <div class="rounded-xl bg-slate-950 border border-slate-800 p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">Linux VFS State</span>
+                                <span class="text-[10px] font-mono text-slate-500">Live Tree</span>
+                            </div>
+                            <div id="vfs-tree" class="font-mono text-xs space-y-1 overflow-x-auto max-h-[220px] overflow-y-auto pr-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- HTTP Response Inspector -->
+                        <div class="rounded-xl bg-slate-950 border border-slate-800 p-4 flex-1 flex flex-col">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-400">HTTP Response</span>
+                                <span id="http-status-badge"
+                                    class="px-2 py-0.5 rounded font-mono text-[11px] bg-slate-800 text-slate-300">200 OK</span>
+                            </div>
+                            <pre id="http-response-preview"
+                                class="p-3 rounded-lg bg-slate-900 border border-slate-800 font-mono text-xs text-slate-200 overflow-x-auto flex-1 min-h-[140px] whitespace-pre-wrap"></pre>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- STAGE 3: RANDOMIZED 2-OF-5 LOGIC GATEKEEPER & CONFIDENCE LAUNCHPAD -->
+            <section class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+
+                <!-- 2-of-5 Logic Gatekeeper Quiz (8 cols) -->
+                <div class="xl:col-span-8 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <div class="flex items-center gap-2.5">
+                                <span
+                                    class="w-6 h-6 rounded-md bg-purple-500/15 text-purple-400 border border-purple-500/30 font-mono text-xs font-bold flex items-center justify-center">3</span>
+                                <div>
+                                    <h2 class="text-base font-bold text-slate-100">Logic Gatekeeper Quiz</h2>
+                                    <p class="text-[11px] text-slate-400">2 randomized questions from a 5-question pool to test concept retention</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span id="quiz-score-label"
+                                    class="text-xs font-mono font-bold text-purple-300 bg-purple-950/40 px-2.5 py-1 rounded border border-purple-500/30">0 / 2 Passed</span>
+                                <button id="shuffle-quiz-btn"
+                                    class="text-xs font-mono text-slate-400 hover:text-slate-200 px-2.5 py-1 rounded bg-slate-950 border border-slate-800 transition-colors flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                    </svg>
+                                    <span>Shuffle Pool</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 2 Rendered Questions -->
+                        <div id="quiz-container" class="space-y-4">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Confidence Launchpad (4 cols) -->
+                <div class="xl:col-span-4 p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2.5 mb-4">
+                            <span
+                                class="w-6 h-6 rounded-md bg-cyan-500/15 text-cyan-400 border border-cyan-500/30 font-mono text-xs font-bold flex items-center justify-center">🚀</span>
+                            <div>
+                                <h2 class="text-base font-bold text-slate-100">Confidence Launchpad</h2>
+                                <p class="text-[11px] text-slate-400">Official PortSwigger Academy bridge</p>
+                            </div>
+                        </div>
+
+                        <!-- Readiness Checklist -->
+                        <div class="space-y-3 mb-5">
+                            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <span id="gate-sandbox-icon"
+                                        class="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-slate-600">✓</span>
+                                    <div>
+                                        <div class="text-xs font-semibold text-slate-200">X-Ray Sandbox Exploit</div>
+                                        <div class="text-[11px] text-slate-400">Exfiltrate /etc/passwd</div>
+                                    </div>
+                                </div>
+                                <span id="gate-sandbox-state" class="text-[10px] font-mono text-slate-500">PENDING</span>
+                            </div>
+
+                            <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
+                                <div class="flex items-center gap-2.5">
+                                    <span id="gate-quiz-icon"
+                                        class="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-slate-600">✓</span>
+                                    <div>
+                                        <div class="text-xs font-semibold text-slate-200">Logic Gatekeeper</div>
+                                        <div class="text-[11px] text-slate-400">Pass 2 randomized questions</div>
+                                    </div>
+                                </div>
+                                <span id="gate-quiz-state" class="text-[10px] font-mono text-slate-500">0/2 PASSED</span>
+                            </div>
+                        </div>
+
+                        <!-- Explore Mode Toggle -->
+                        <div class="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 mb-5">
+                            <div class="flex items-center justify-between gap-2">
+                                <div>
+                                    <div class="text-xs font-semibold text-slate-200">Explore Mode</div>
+                                    <div class="text-[11px] text-slate-400">Bypass gatekeeper locks</div>
+                                </div>
+                                <button id="explore-mode-toggle" type="button" role="switch" aria-checked="false"
+                                    class="w-9 h-5 rounded-full bg-slate-800 border border-slate-700 p-0.5 transition-colors relative">
+                                    <span id="explore-mode-knob"
+                                        class="block w-3.5 h-3.5 rounded-full bg-slate-400 transition-transform translate-x-0"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Direct PortSwigger Lab Launch Button -->
+                    <a id="launch-wsa-btn" href="#" target="_blank" rel="noopener noreferrer"
+                        class="w-full py-3.5 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed">
+                        <svg id="launch-lock-icon" class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                        <span id="launch-btn-text">Complete Sandbox & Quiz to Unlock</span>
+                    </a>
+                </div>
+            </section>
+
+            <!-- STAGE 4: REAL-WORLD BUG BOUNTY ARENA -->
+            <section class="p-5 sm:p-6 rounded-2xl bg-slate-900/90 border border-rose-500/20 shadow-xl relative overflow-hidden">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                    <div class="flex items-center gap-2.5">
+                        <span
+                            class="w-6 h-6 rounded-md bg-rose-500/20 text-rose-400 border border-rose-500/40 font-mono text-xs font-bold flex items-center justify-center">4</span>
+                        <div>
+                            <h2 class="text-base font-bold text-slate-100">Real-World Bug Bounty Arena</h2>
+                            <p class="text-[11px] text-slate-400">Sequential unassisted targets: Type raw payloads without preset buttons</p>
+                        </div>
+                    </div>
+                    <span id="arena-progress-badge"
+                        class="px-2.5 py-1 rounded text-xs font-mono font-bold bg-rose-500/10 text-rose-300 border border-rose-500/30">
+                        0 / 3 Targets Compromised
+                    </span>
+                </div>
+
+                <!-- 3 Target Scenario Cards -->
+                <div id="arena-tabs" class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Active Target Arena Workspace -->
+                <div id="arena-workspace" class="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+    <!-- MODULE ENTRY POINT -->
+    <script type="module">
+        import { getModule } from './src/modules/registry.js';
+        import { StateManager } from './src/core/state-manager.js';
+        import { Router } from './src/core/router.js';
+        import { PipelineTracer } from './src/core/pipeline-tracer.js';
+        import { QuizEngine } from './src/core/quiz-engine.js';
+        import { UIRenderer } from './src/core/ui-renderer.js';
+
+        const router = new Router();
+        const route = router.getQueryParams();
+        const moduleSlug = route.module || 'path-traversal';
+        const targetModule = getModule(moduleSlug);
+
+        if (!targetModule || !targetModule.labs) {
+            window.location.href = 'index.html';
+        }
+
+        const stateManager = new StateManager(moduleSlug);
+        const pipelineTracer = new PipelineTracer();
+        const quizEngine = new QuizEngine(stateManager);
+
+        const uiRenderer = new UIRenderer({
+            moduleConfig: {
+                moduleMetadata: targetModule.metadata,
+                fundamentals: targetModule.fundamentals,
+                labs: targetModule.labs
+            },
+            arenaConfig: targetModule.arena || [],
+            stateManager,
+            pipelineTracer,
+            quizEngine,
+            router
+        });
+
+        const initialLabIdx = Math.max(0, Math.min(route.lab - 1, targetModule.labs.length - 1));
+        uiRenderer.init(initialLabIdx);
+
+        // Expose renderer to window for quick button bindings
+        window.uiRenderer = uiRenderer;
+
+        // Header controls
+        document.getElementById('export-backup-btn').onclick = () => uiRenderer.exportBackup();
+        document.getElementById('import-backup-btn').onclick = () => document.getElementById('import-file-input').click();
+        document.getElementById('import-file-input').onchange = (e) => {
+            if (e.target.files.length > 0) {
+                uiRenderer.importBackup(e.target.files[0]);
+                e.target.value = '';
+            }
+        };
+        document.getElementById('reset-progress-btn').onclick = () => uiRenderer.resetAllProgress();
+
+        // Stage 0 controls
+        document.getElementById('fundamentals-toggle-btn').onclick = () => uiRenderer.toggleFundamentalsDrawer();
+
+        // Stage 1 controls
+        document.getElementById('trace-packet-btn').onclick = () => {
+            const lab = targetModule.labs[uiRenderer.activeLabIndex];
+            const rawInput = document.getElementById('payload-input').value;
+            const result = lab.simulate(rawInput);
+            pipelineTracer.animate({ rawInput, lab, result });
+        };
+
+        // Stage 2 controls
+        document.getElementById('hint-toggle-btn').onclick = () => uiRenderer.toggleHint();
+        document.getElementById('send-request-btn').onclick = () => uiRenderer.executePayload(true);
+
+        // Stage 3 controls
+        document.getElementById('shuffle-quiz-btn').onclick = () => uiRenderer.reshuffleQuizPool();
+        document.getElementById('explore-mode-toggle').onclick = () => uiRenderer.toggleExploreMode();
+        document.getElementById('launch-wsa-btn').onclick = (e) => uiRenderer.handleLaunchClick(e);
+
+        // Handle URL back/forward navigation
+        router.onNavigate((newRoute) => {
+            if (newRoute.module === moduleSlug) {
+                const targetIdx = Math.max(0, Math.min(newRoute.lab - 1, targetModule.labs.length - 1));
+                if (targetIdx !== uiRenderer.activeLabIndex) {
+                    uiRenderer.selectLab(targetIdx, false);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
