@@ -1,7 +1,7 @@
 /**
  * Path Traversal Module Configuration
- * Domain: Directory & Path Traversal (Unnumbered module)
- * Contains 6 sequentially numbered PortSwigger Academy labs with X-Ray simulators and 5-question quiz pools.
+ * Domain: Directory & Path Traversal
+ * Contains 6 sequentially numbered PortSwigger Academy labs with illustrative backend models and quiz questions.
  */
 import { safeUrlDecode, resolvePosixPath } from '../../engines/posix-vfs-engine.js';
 
@@ -22,26 +22,26 @@ export const moduleMetadata = {
 };
 
 export const fundamentals = {
-    title: 'Fundamentals & Normal Application Behavior',
-    subtitle: 'Conceptual baseline before inspecting lab-specific filters',
+    title: 'Fundamentals & Normal Behavior',
+    subtitle: 'Core concepts, practical examples, and real-world analogies',
     pillars: [
         {
             number: '01',
             title: 'What is Path Traversal?',
             color: 'text-sky-400',
-            description: 'A filesystem access flaw allowing an attacker to read (or write) arbitrary files outside the web server\'s intended root directory by manipulating file path references.'
+            description: 'A flaw where a website accepts filenames from users (like <code class="text-slate-200">?file=report.pdf</code>) and opens them directly from disk. If the server doesn\'t restrict the path, an attacker can look outside the intended folder and read sensitive operating system files.'
         },
         {
             number: '02',
-            title: 'Where is it Usually Found?',
+            title: 'The Filing Cabinet Analogy',
             color: 'text-emerald-400',
-            description: 'Static asset endpoints (<code class="text-slate-200">?image=</code>), PDF/invoice downloaders (<code class="text-slate-200">?doc=</code>), log viewers, and dynamic template or language selectors.'
+            description: 'Imagine asking an office clerk for a file inside a cabinet labeled <em>Public Brochures</em>. If you ask for <em>"../../Confidential/Payroll.xlsx"</em>, a careless clerk follows the instructions, steps out of the brochure cabinet, and hands you private payroll records.'
         },
         {
             number: '03',
-            title: 'What Introduces the Flaw?',
+            title: 'Why Does It Happen?',
             color: 'text-amber-400',
-            description: 'Concatenating untrusted user input directly into OS file-reading APIs without canonicalizing the resolved path and verifying it stays inside the base directory.'
+            description: 'Developers often join user input directly to a base folder path using string addition (<code class="text-slate-200">base + input</code>). Because the operating system interprets <code class="text-slate-200">../</code> as "step up to the parent directory", each pair climbs one directory higher toward the system root.'
         }
     ]
 };
@@ -56,21 +56,21 @@ export const labs = [
         filterBadge: 'NO FILTER',
         backendFile: 'image_loader.py',
         bullets: [
-            'The server appends the user-supplied <code>filename</code> directly onto <code>/var/www/images/</code> without sanitization.',
-            'POSIX filesystems interpret <code>../</code> sequences as instructions to step up one parent directory.',
-            'Chaining multiple parent-directory segments climbs out of <code>/var/www/images/</code> to the filesystem root <code>/</code>.'
+            'The server appends the user-supplied <code>filename</code> directly onto <code>/var/www/images/</code> without any filtering.',
+            'In operating systems, <code>../</code> tells the filesystem to step up one directory level.',
+            'Repeating <code>../</code> three times climbs out of <code>/var/www/images/</code> to the root <code>/</code>, granting access to <code>/etc/passwd</code>.'
         ],
-        hint: 'You start inside /var/www/images/ (3 levels deep from root /). Chain three parent-directory segments ("..") before etc/passwd.',
+        hint: 'The web folder is 3 levels deep (/var/www/images/). Supply three "../" segments to reach the root, then specify etc/passwd.',
         probes: [
-            { label: '218.png (Baseline)', value: '218.png' },
-            { label: '../ (Parent Step)', value: '../' },
-            { label: '../html/index.php (Sibling)', value: '../html/index.php' },
-            { label: '../../../etc/passwd (Exploit)', value: '../../../etc/passwd' }
+            { label: '218.png', value: '218.png' },
+            { label: '../', value: '../' },
+            { label: '../html/index.php', value: '../html/index.php' },
+            { label: '⚡ ../../../etc/passwd', value: '../../../etc/passwd', isExploit: true }
         ],
         codeLines: [
             { num: 1, code: 'def get_image(request):', active: true },
             { num: 2, code: '    filename = url_decode(request.args.get("filename"))', active: true },
-            { num: 3, code: '    # VULNERABLE: Direct concatenation with no validation', active: false, comment: true },
+            { num: 3, code: '    # Direct string concatenation without path verification', active: false, comment: true },
             { num: 4, code: '    full_path = "/var/www/images/" + filename', active: true },
             { num: 5, code: '    return os_read_file(full_path)', active: true }
         ],
@@ -81,8 +81,8 @@ export const labs = [
 
             return {
                 steps: [
-                    { label: '1. URL Decoded Input', value: decoded, highlight: decoded !== rawInput },
-                    { label: '2. WAF / Sanitization', value: 'None applied (Direct pass-through)', status: 'bypassed' },
+                    { label: '1. Decoded Input', value: decoded, highlight: decoded !== rawInput },
+                    { label: '2. Filter Check', value: 'None (Direct pass-through)', status: 'bypassed' },
                     { label: '3. Concatenated Path', value: joined, highlight: true },
                     { label: '4. Canonical OS Path', value: canonical, isTarget: canonical === '/etc/passwd' }
                 ],
@@ -99,7 +99,7 @@ export const labs = [
                 question: 'Why does /var/www/images/../../../etc/passwd resolve to /etc/passwd?',
                 options: [
                     'The web server automatically redirects unknown images to /etc/',
-                    'Each "../" pops one directory off the path stack (images -> www -> var -> /)',
+                    'Each "../" steps up one directory (images -> www -> var -> /)',
                     'The plus (+) operator strips /var/www/images/ when a dot is present'
                 ],
                 correctIndex: 1,
@@ -157,16 +157,16 @@ export const labs = [
         filterBadge: 'BLOCKS ../',
         backendFile: 'image_loader.js',
         bullets: [
-            'The application blocks any input containing dot-dot-slash sequences (<code>../</code> or <code>..\\</code>).',
-            'However, it fails to check if the input starts with a leading slash <code>/</code> (an absolute path).',
-            'Many file APIs ignore the base directory if the second argument is an absolute filesystem path.'
+            'The application checks for and blocks any input containing <code>../</code> or <code>..\\</code>.',
+            'However, it neglects to check whether the input begins with a leading slash <code>/</code> (an absolute path).',
+            'Many standard filesystem functions discard the base directory whenever an absolute path is provided.'
         ],
-        hint: 'Since "../" is blocked, don’t traverse relatively! Supply a full absolute path starting with a leading slash "/".',
+        hint: 'Since "../" is blocked, avoid relative climbing. Pass a full absolute path starting with a leading slash "/".',
         probes: [
-            { label: '218.png (Baseline)', value: '218.png' },
-            { label: '../etc/passwd (Blocked)', value: '../etc/passwd' },
-            { label: '/var/www/images/218.png (Base)', value: '/var/www/images/218.png' },
-            { label: '/etc/passwd (Absolute Bypass)', value: '/etc/passwd' }
+            { label: '218.png', value: '218.png' },
+            { label: '../etc/passwd', value: '../etc/passwd' },
+            { label: '/var/www/images/218.png', value: '/var/www/images/218.png' },
+            { label: '⚡ /etc/passwd', value: '/etc/passwd', isExploit: true }
         ],
         codeLines: [
             { num: 1, code: 'function getImage(req, res) {', active: true },
@@ -174,7 +174,7 @@ export const labs = [
             { num: 3, code: '  if (filename.includes("../") || filename.includes("..\\\\")) {', active: true },
             { num: 4, code: '    return res.status(403).send("Blocked: Traversal sequence detected");', active: false },
             { num: 5, code: '  }', active: true },
-            { num: 6, code: '  // VULNERABLE: path.resolve ignores base if filename starts with "/"', active: false, comment: true },
+            { num: 6, code: '  // path.resolve resets to root if filename starts with a leading "/"', active: false, comment: true },
             { num: 7, code: '  const fullPath = path.resolve("/var/www/images/", filename);', active: true },
             { num: 8, code: '  return fs.readFileSync(fullPath);', active: true }
         ],
@@ -185,8 +185,8 @@ export const labs = [
             if (hasTraversal) {
                 return {
                     steps: [
-                        { label: '1. URL Decoded Input', value: decoded },
-                        { label: '2. Sequence Check', value: 'BLOCKED: Contains "../" traversal pattern', status: 'blocked' },
+                        { label: '1. Decoded Input', value: decoded },
+                        { label: '2. Sequence Check', value: 'BLOCKED: Contains "../" pattern', status: 'blocked' },
                         { label: '3. Concatenated Path', value: 'Execution halted at Line 4' },
                         { label: '4. Canonical OS Path', value: 'N/A (HTTP 403 Forbidden)' }
                     ],
@@ -196,7 +196,7 @@ export const labs = [
                     traversalSteps: [],
                     activeLines: [1, 2, 3, 4],
                     blocked: true,
-                    blockReason: 'HTTP 403 Forbidden: Malicious traversal sequence "../" detected by application filter.'
+                    blockReason: 'HTTP 403 Forbidden: Traversal sequence "../" detected by application filter.'
                 };
             }
 
@@ -205,9 +205,9 @@ export const labs = [
 
             return {
                 steps: [
-                    { label: '1. URL Decoded Input', value: decoded },
-                    { label: '2. Sequence Check', value: 'PASSED (No "../" substring found)', status: 'bypassed' },
-                    { label: '3. path.resolve() Output', value: joined, highlight: decoded.startsWith('/') },
+                    { label: '1. Decoded Input', value: decoded },
+                    { label: '2. Sequence Check', value: 'PASSED (No "../" found)', status: 'bypassed' },
+                    { label: '3. Resolved Path', value: joined, highlight: decoded.startsWith('/') },
                     { label: '4. Canonical OS Path', value: canonical, isTarget: canonical === '/etc/passwd' }
                 ],
                 filterSummary: 'PASSED (NO ../)',
@@ -223,8 +223,8 @@ export const labs = [
                 question: 'Why does path.resolve("/var/www/images/", "/etc/passwd") ignore /var/www/images/?',
                 options: [
                     'Because /etc/passwd has no file extension',
-                    'In POSIX path resolution APIs, a leading "/" resets the path to the filesystem root',
-                    'The WAF automatically strips /var/www/images/ on 403 errors'
+                    'In path resolution APIs, a leading "/" resets the path directly to root',
+                    'The web server automatically strips the base folder on errors'
                 ],
                 correctIndex: 1,
                 explanation: 'Correct! Standard path resolve helpers treat any argument starting with "/" as an absolute root path, discarding prior base segments.'
@@ -281,21 +281,21 @@ export const labs = [
         filterBadge: 'STRIP ../ (1x)',
         backendFile: 'sanitize.php',
         bullets: [
-            'Instead of blocking, the server attempts to sanitize input by stripping <code>../</code> once (non-recursively).',
-            'Because <code>replace("../", "")</code> only executes a single pass over the string, nested sequences collapse into valid ones.',
-            'Wrapping a traversal token inside another outer pair leaves an intact <code>../</code> after the inner substring is removed.'
+            'Instead of blocking, the server attempts to clean input by stripping <code>../</code> once (single pass).',
+            'Because the strip only runs once, nested patterns like <code>....//</code> collapse into valid <code>../</code> sequences.',
+            'Wrapping a traversal token inside another leaves an intact <code>../</code> after the inner part is deleted.'
         ],
         hint: 'If the server deletes "../" once from the middle of a nested sequence, the outer characters collapse together into "../".',
         probes: [
-            { label: '218.png (Baseline)', value: '218.png' },
-            { label: '../etc/passwd (Stripped)', value: '../etc/passwd' },
+            { label: '218.png', value: '218.png' },
+            { label: '../etc/passwd', value: '../etc/passwd' },
             { label: '....//etc/hosts', value: '....//etc/hosts' },
-            { label: '....//....//....//etc/passwd (Nested)', value: '....//....//....//etc/passwd' }
+            { label: '⚡ ....//....//....//etc/passwd', value: '....//....//....//etc/passwd', isExploit: true }
         ],
         codeLines: [
             { num: 1, code: '<?php', active: true },
             { num: 2, code: '$raw = urldecode($_GET["filename"]);', active: true },
-            { num: 3, code: '// VULNERABLE: Single-pass non-recursive string replacement', active: false, comment: true },
+            { num: 3, code: '// Single-pass non-recursive string removal flaw', active: false, comment: true },
             { num: 4, code: '$sanitized = str_replace("../", "", $raw);', active: true },
             { num: 5, code: '$path = "/var/www/images/" . $sanitized;', active: true },
             { num: 6, code: 'readfile($path);', active: true }
@@ -308,8 +308,8 @@ export const labs = [
 
             return {
                 steps: [
-                    { label: '1. URL Decoded Input', value: decoded },
-                    { label: '2. str_replace("../", "")', value: sanitized, highlight: sanitized !== decoded, status: sanitized.includes('../') ? 'bypassed' : 'neutral' },
+                    { label: '1. Decoded Input', value: decoded },
+                    { label: '2. After str_replace()', value: sanitized, highlight: sanitized !== decoded, status: sanitized.includes('../') ? 'bypassed' : 'neutral' },
                     { label: '3. Concatenated Path', value: joined },
                     { label: '4. Canonical OS Path', value: canonical, isTarget: canonical === '/etc/passwd' }
                 ],
@@ -384,24 +384,24 @@ export const labs = [
         filterBadge: 'DOUBLE DECODE',
         backendFile: 'gateway_filter.java',
         bullets: [
-            'The web server URL-decodes the query parameter once before passing it to a security filter that blocks <code>../</code>.',
-            'After the security check passes, the application performs a <strong>second (superfluous) URL-decode</strong> before opening the file.',
-            'Double-encoding special characters smuggles the payload past the WAF during Pass 1 and restores <code>../</code> during Pass 2.'
+            'The web server URL-decodes the query parameter once before checking for <code>../</code>.',
+            'After the security check passes, the application executes a <strong>second URL-decode</strong> before opening the file.',
+            'Double-encoding special characters hides the payload during Pass 1 and restores <code>../</code> during Pass 2.'
         ],
-        hint: 'The web server decodes %25 into % during Pass 1. Double-encode dots (%252e) and slashes (%252f) so Pass 2 reveals "../".',
+        hint: 'The server decodes %25 into % on Pass 1. Double-encode dots (%252e) and slashes (%252f) so Pass 2 reveals "../".',
         probes: [
-            { label: '218.png (Baseline)', value: '218.png' },
-            { label: '%2e%2e%2fetc/hosts (Pass 1 Blocked)', value: '%2e%2e%2fetc/hosts' },
-            { label: 'Double-Encoded hosts', value: '%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/hosts' },
-            { label: 'Double-Encoded passwd (Exploit)', value: '%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd' }
+            { label: '218.png', value: '218.png' },
+            { label: '%2e%2e%2fetc/hosts', value: '%2e%2e%2fetc/hosts' },
+            { label: '%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/hosts', value: '%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/hosts' },
+            { label: '⚡ %252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd', value: '%252e%252e%252f%252e%252e%252f%252e%252e%252fetc/passwd', isExploit: true }
         ],
         codeLines: [
             { num: 1, code: 'String serverDecoded = webServer.urlDecode(rawParam); // Pass 1', active: true },
             { num: 2, code: 'if (serverDecoded.contains("../")) {', active: true },
             { num: 3, code: '    throw new SecurityException("403: Traversal blocked");', active: false },
             { num: 4, code: '}', active: true },
-            { num: 5, code: '// VULNERABLE: Superfluous 2nd URL-decode after WAF check!', active: false, comment: true },
-            { num: 6, code: 'String appDecoded = URLDecoder.decode(serverDecoded, "UTF-8");', active: true },
+            { num: 5, code: '// Redundant second URL-decode after validation check', active: false, comment: true },
+            { num: 6, code: 'String appDecoded = URLDecoder.decode(serverDecoded, "UTF-8"); // Pass 2', active: true },
             { num: 7, code: 'return Files.readString(Paths.get("/var/www/images/" + appDecoded));', active: true }
         ],
         simulate: (rawInput) => {
@@ -506,21 +506,21 @@ export const labs = [
         filterBadge: 'PREFIX CHECK',
         backendFile: 'media_controller.go',
         bullets: [
-            'The client sends the full file path (e.g., <code>/var/www/images/218.png</code>) in the <code>filename</code> parameter.',
-            'The backend validates that the raw string begins with <code>/var/www/images/</code> before opening it.',
-            'Checking prefix <em>before</em> resolving <code>../</code> allows you to satisfy the prefix check and then traverse upward.'
+            'The client transmits the full file path (e.g., <code>/var/www/images/218.png</code>).',
+            'The backend verifies that the raw string begins with <code>/var/www/images/</code> before opening it.',
+            'Checking prefix <em>before</em> resolving <code>../</code> lets you keep the required prefix and still climb up afterward.'
         ],
-        hint: 'Keep the required prefix "/var/www/images/" at the start of your input, then append parent-directory segments ("..") after it.',
+        hint: 'Keep the required prefix "/var/www/images/" at the start, then append "../" segments after it to escape.',
         probes: [
-            { label: '/var/www/images/218.png (Base)', value: '/var/www/images/218.png' },
-            { label: '../etc/passwd (Missing Prefix)', value: '../etc/passwd' },
+            { label: '/var/www/images/218.png', value: '/var/www/images/218.png' },
+            { label: '../etc/passwd', value: '../etc/passwd' },
             { label: '/var/www/images/../html/index.php', value: '/var/www/images/../html/index.php' },
-            { label: '/var/www/images/../../../etc/passwd (Bypass)', value: '/var/www/images/../../../etc/passwd' }
+            { label: '⚡ /var/www/images/../../../etc/passwd', value: '/var/www/images/../../../etc/passwd', isExploit: true }
         ],
         codeLines: [
             { num: 1, code: 'func serveMedia(filename string) ([]byte, error) {', active: true },
             { num: 2, code: '    decoded := urlDecode(filename)', active: true },
-            { num: 3, code: '    // VULNERABLE: Prefix checked BEFORE path canonicalization!', active: false, comment: true },
+            { num: 3, code: '    // Prefix validated on unnormalized input path', active: false, comment: true },
             { num: 4, code: '    if !strings.HasPrefix(decoded, "/var/www/images/") {', active: true },
             { num: 5, code: '        return nil, errors.New("403: Invalid base directory")', active: false },
             { num: 6, code: '    }', active: true },
@@ -533,9 +533,9 @@ export const labs = [
             if (!hasValidPrefix) {
                 return {
                     steps: [
-                        { label: '1. URL Decoded Input', value: decoded },
+                        { label: '1. Decoded Input', value: decoded },
                         { label: '2. Prefix Check', value: 'BLOCKED: Must start with "/var/www/images/"', status: 'blocked' },
-                        { label: '3. Raw Input Path', value: 'Execution halted at Line 5' },
+                        { label: '3. Input Path', value: 'Execution halted at Line 5' },
                         { label: '4. Canonical OS Path', value: 'N/A (HTTP 403 Forbidden)' }
                     ],
                     filterSummary: 'PREFIX MISMATCH',
@@ -551,9 +551,9 @@ export const labs = [
             const { canonical, traversalSteps } = resolvePosixPath(decoded);
             return {
                 steps: [
-                    { label: '1. URL Decoded Input', value: decoded },
+                    { label: '1. Decoded Input', value: decoded },
                     { label: '2. Prefix Check', value: 'PASSED: Starts with "/var/www/images/"', status: canonical.startsWith('/var/www/images/') ? 'neutral' : 'bypassed' },
-                    { label: '3. Unresolved Path', value: decoded },
+                    { label: '3. Raw Path', value: decoded },
                     { label: '4. Canonical OS Path', value: canonical, isTarget: canonical === '/etc/passwd' }
                 ],
                 filterSummary: 'PREFIX VALID',
@@ -627,23 +627,23 @@ export const labs = [
         filterBadge: 'NULL BYTE %00',
         backendFile: 'legacy_image.c / php',
         bullets: [
-            'High-level application code checks that the decoded filename ends with an expected extension (<code>.png</code>).',
-            'Under the hood, legacy C/C++ OS syscalls (<code>fopen</code>) treat a null byte (<code>0x00</code> / <code>%00</code>) as the end-of-string terminator.',
-            'Injecting a URL-encoded null byte before <code>.png</code> satisfies the suffix check while truncating the path in the OS kernel.'
+            'Application code verifies that the decoded filename ends with an expected extension (<code>.png</code>).',
+            'However, underlying C-based OS file calls treat a null byte (<code>0x00</code> / <code>%00</code>) as the end of the string.',
+            'Adding a URL-encoded null byte before <code>.png</code> passes the extension check while truncating the file path at the kernel level.'
         ],
         hint: 'Traverse to the target file, then append a URL-encoded null byte (%00) followed by .png so the suffix check passes.',
         probes: [
-            { label: '218.png (Baseline)', value: '218.png' },
-            { label: '../etc/passwd (Missing .png)', value: '../etc/passwd' },
-            { label: '../../../etc/passwd.png (Missing File)', value: '../../../etc/passwd.png' },
-            { label: '../../../etc/passwd%00.png (Null Byte Exploit)', value: '../../../etc/passwd%00.png' }
+            { label: '218.png', value: '218.png' },
+            { label: '../etc/passwd', value: '../etc/passwd' },
+            { label: '../../../etc/passwd.png', value: '../../../etc/passwd.png' },
+            { label: '⚡ ../../../etc/passwd%00.png', value: '../../../etc/passwd%00.png', isExploit: true }
         ],
         codeLines: [
             { num: 1, code: '$filename = urldecode($_GET["filename"]); // %00 becomes \\0', active: true },
             { num: 2, code: 'if (!str_ends_with($filename, ".png")) {', active: true },
             { num: 3, code: '    die("403: Only .png files allowed");', active: false },
             { num: 4, code: '}', active: true },
-            { num: 5, code: '// VULNERABLE: Underlying C syscall stops reading at first \\0 byte!', active: false, comment: true },
+            { num: 5, code: '// Legacy C-level filesystem call stops reading at first \\0 null byte', active: false, comment: true },
             { num: 6, code: 'FILE *fp = fopen(concat("/var/www/images/", filename), "r");', active: true }
         ],
         simulate: (rawInput) => {
@@ -653,9 +653,9 @@ export const labs = [
             if (!endsWithPng) {
                 return {
                     steps: [
-                        { label: '1. URL Decoded Input', value: decoded.replace(/\0/g, '\\0') },
+                        { label: '1. Decoded Input', value: decoded.replace(/\0/g, '\\0') },
                         { label: '2. Extension Check', value: 'BLOCKED: Does not end with ".png"', status: 'blocked' },
-                        { label: '3. C-String Truncation', value: 'Execution halted at Line 3' },
+                        { label: '3. String Truncation', value: 'Execution halted at Line 3' },
                         { label: '4. Canonical OS Path', value: 'N/A (HTTP 403 Forbidden)' }
                     ],
                     filterSummary: 'EXT BLOCKED',
@@ -675,9 +675,9 @@ export const labs = [
 
             return {
                 steps: [
-                    { label: '1. URL Decoded Input', value: decoded.replace(/\0/g, '\\0') },
+                    { label: '1. Decoded Input', value: decoded.replace(/\0/g, '\\0') },
                     { label: '2. Extension Check', value: 'PASSED: Ends with ".png"', status: nullIndex !== -1 ? 'bypassed' : 'neutral' },
-                    { label: '3. C Syscall (\\0 Truncated)', value: joined, highlight: nullIndex !== -1 },
+                    { label: '3. OS Syscall (Truncated)', value: joined, highlight: nullIndex !== -1 },
                     { label: '4. Canonical OS Path', value: canonical, isTarget: canonical === '/etc/passwd' }
                 ],
                 filterSummary: nullIndex !== -1 ? 'NULL TRUNCATED' : 'EXT VALID',

@@ -18,10 +18,12 @@ export class UIRenderer {
         this.motionGraphic = null;
         this.activeLabIndex = 0;
         this.activeArenaIndex = 0;
+        this.currentView = 'lab'; // 'lab' | 'playground'
     }
 
-    init(initialLabIndex = 0) {
+    init(initialLabIndex = 0, initialView = 'lab') {
         this.activeLabIndex = initialLabIndex;
+        this.currentView = initialView;
         this.stateManager.load(this.moduleConfig.labs);
 
         // Mount motion graphic component
@@ -36,11 +38,11 @@ export class UIRenderer {
         this.renderModuleHeader();
         this.renderCommonMission();
 
-        // Select the active lab
-        this.selectLab(this.activeLabIndex, false);
-
-        // Render Bug Bounty Arena
-        this.renderArena();
+        if (this.currentView === 'playground') {
+            this.showPlaygroundView();
+        } else {
+            this.selectLab(this.activeLabIndex, false);
+        }
 
         // Setup global event listeners
         this.bindEvents();
@@ -95,7 +97,15 @@ export class UIRenderer {
 
     selectLab(index, updateHistory = true) {
         if (index < 0 || index >= this.moduleConfig.labs.length) return;
+        this.currentView = 'lab';
         this.activeLabIndex = index;
+
+        // Switch main workspace view: show lab cockpit, hide exploit playground
+        const labView = document.getElementById('lab-cockpit-view');
+        const playgroundView = document.getElementById('playground-view-container');
+        if (labView) labView.classList.remove('hidden');
+        if (playgroundView) playgroundView.classList.add('hidden');
+
         if (updateHistory) {
             this.router.setRoute(this.moduleConfig.moduleMetadata.slug, index);
         }
@@ -120,7 +130,7 @@ export class UIRenderer {
             titleEl.textContent = lab.title;
         }
 
-        // Stage 1 Concept Bullets
+        // Stage 2 Concept Bullets
         const bulletsEl = document.getElementById('concept-bullets');
         if (bulletsEl) {
             bulletsEl.innerHTML = lab.bullets.map(b => `
@@ -144,7 +154,7 @@ export class UIRenderer {
             this.stateManager.state.hintVisible = false;
         }
 
-        // Stage 2: Default input & Conceptual Probe Chips
+        // Stage 3: Default input & Clean Probe Chips
         const defaultProbe = lab.probes[0]?.value || '218.png';
         const payloadInput = document.getElementById('payload-input');
         if (payloadInput) payloadInput.value = defaultProbe;
@@ -154,15 +164,22 @@ export class UIRenderer {
 
         const chipsEl = document.getElementById('probe-chips');
         if (chipsEl) {
-            chipsEl.innerHTML = lab.probes.map((probe, idx) => `
-        <button 
-          type="button"
-          data-probe-val="${escapeHtml(probe.value)}"
-          class="probe-chip-btn px-2.5 py-1 rounded-md text-[11px] font-mono bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-300 border border-slate-700/80 transition-colors"
-        >
-          ${idx === lab.probes.length - 1 ? '⚡ ' : ''}${escapeHtml(probe.label)}
-        </button>
-      `).join('');
+            chipsEl.innerHTML = lab.probes.map((probe) => {
+                const isExploit = probe.isExploit || probe.label.startsWith('⚡');
+                const chipClass = isExploit
+                    ? 'bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 hover:text-white border-rose-500/40 font-semibold shadow-sm'
+                    : 'bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-emerald-300 border-slate-700/80';
+
+                return `
+          <button 
+            type="button"
+            data-probe-val="${escapeHtml(probe.value)}"
+            class="probe-chip-btn px-2.5 py-1 rounded-md text-[11px] font-mono border transition-colors ${chipClass}"
+          >
+            ${escapeHtml(probe.label)}
+          </button>
+        `;
+            }).join('');
 
             chipsEl.querySelectorAll('.probe-chip-btn').forEach(btn => {
                 btn.onclick = () => {
@@ -179,12 +196,26 @@ export class UIRenderer {
         this.updateReadinessUI();
     }
 
+    showPlaygroundView() {
+        this.currentView = 'playground';
+
+        // Switch main workspace view: hide lab cockpit, show exploit playground
+        const labView = document.getElementById('lab-cockpit-view');
+        const playgroundView = document.getElementById('playground-view-container');
+        if (labView) labView.classList.add('hidden');
+        if (playgroundView) playgroundView.classList.remove('hidden');
+
+        this.renderSidebar();
+        this.renderArena();
+    }
+
     renderSidebar() {
         const container = document.getElementById('lab-list');
         if (!container) return;
 
-        container.innerHTML = this.moduleConfig.labs.map((lab, idx) => {
-            const isActive = idx === this.activeLabIndex;
+        // Render Labs 1-6
+        const labsHtml = this.moduleConfig.labs.map((lab, idx) => {
+            const isActive = this.currentView === 'lab' && idx === this.activeLabIndex;
             const complete = this.stateManager.isLabComplete(lab);
 
             const badgeColor = lab.level === 'APPRENTICE'
@@ -218,19 +249,65 @@ export class UIRenderer {
             ${stateIndicator}
           </div>
           <div class="text-xs font-semibold text-slate-100 line-clamp-2">${escapeHtml(lab.title)}</div>
-          <div class="mt-2 flex items-center justify-between text-[10px] font-mono text-slate-400">
-            <span>Filter: <strong class="text-slate-300">${escapeHtml(lab.filterBadge)}</strong></span>
-          </div>
         </button>
       `;
         }).join('');
 
+        // Dedicated Exploit Playground Sidebar Item
+        const isPlaygroundActive = this.currentView === 'playground';
+        const solvedTotal = this.arenaConfig.filter(s => this.stateManager.getArenaState(s).solved).length;
+        const allPlaygroundSolved = solvedTotal === this.arenaConfig.length;
+
+        const playgroundActiveStyles = isPlaygroundActive
+            ? 'bg-slate-800/90 border-rose-500/70 shadow-lg shadow-rose-500/10'
+            : 'bg-slate-900/60 hover:bg-slate-900 border-slate-800/80 hover:border-slate-700';
+
+        const playgroundItemHtml = `
+      <div class="mt-4 pt-4 border-t border-slate-800/80">
+        <div class="flex items-center justify-between px-1 mb-2">
+          <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-rose-400">Practical Challenge</span>
+          <span class="text-[10px] font-mono text-slate-500">${solvedTotal}/${this.arenaConfig.length} Solved</span>
+        </div>
+        <button 
+          type="button"
+          id="sidebar-playground-btn"
+          class="w-full text-left p-3 rounded-xl border transition-all ${playgroundActiveStyles}"
+        >
+          <div class="flex items-center justify-between gap-1 mb-1.5">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border bg-rose-500/10 text-rose-400 border-rose-500/30">
+                PRACTICE
+              </span>
+            </div>
+            ${allPlaygroundSolved
+                ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">COMPLETED</span>'
+                : isPlaygroundActive
+                    ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">ACTIVE</span>'
+                    : ''}
+          </div>
+          <div class="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+            <span>🎯 Exploit Playground</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1">3 unassisted targets to test practical knowledge</p>
+        </button>
+      </div>
+    `;
+
+        container.innerHTML = labsHtml + playgroundItemHtml;
+
+        // Wire lab click listeners
         container.querySelectorAll('.sidebar-lab-btn').forEach(btn => {
             btn.onclick = () => {
                 const idx = parseInt(btn.getAttribute('data-lab-index'), 10);
                 this.selectLab(idx);
             };
         });
+
+        // Wire playground button listener
+        const pgBtn = document.getElementById('sidebar-playground-btn');
+        if (pgBtn) {
+            pgBtn.onclick = () => this.showPlaygroundView();
+        }
 
         // Global Module Progress Bar
         const totalLabs = this.moduleConfig.labs.length;
@@ -263,7 +340,7 @@ export class UIRenderer {
         this.renderQuiz();
         this.renderSidebar();
         this.updateReadinessUI();
-        this.showToast('Quiz Pool Shuffled', 'Drew 2 fresh questions from the 5-question pool.', 'cyan');
+        this.showToast('Questions Shuffled', 'Loaded two fresh questions to test your understanding.', 'cyan');
     }
 
     executePayload(userTriggered = true) {
@@ -279,7 +356,7 @@ export class UIRenderer {
         if (!result.blocked && result.canonicalPath === '/etc/passwd' && !prog.sandboxSolved) {
             prog.sandboxSolved = true;
             this.stateManager.save();
-            this.showToast('Target File Exfiltrated!', 'Successfully read /etc/passwd. Pass the quiz to unlock the official lab!', 'emerald');
+            this.showToast('Target File Exfiltrated!', 'Successfully read /etc/passwd. Answer the quiz to unlock the official lab!', 'emerald');
             this.renderSidebar();
             this.updateReadinessUI();
         }
@@ -332,7 +409,7 @@ export class UIRenderer {
         }
 
         if (stepsEl) {
-            stepsEl.innerHTML = result.steps.map((step, idx) => {
+            stepsEl.innerHTML = result.steps.map((step) => {
                 let badgeClass = 'bg-slate-900 border-slate-800 text-slate-400';
                 if (step.status === 'blocked') {
                     badgeClass = 'bg-rose-950/60 border-rose-500/40 text-rose-300 font-bold';
@@ -489,14 +566,14 @@ export class UIRenderer {
             const passedCount = sampledIndices.filter(poolIdx => prog.quizAnswers[poolIdx] === lab.quizPool[poolIdx].correctIndex).length;
             if (quizPassed) {
                 pillQz.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border bg-emerald-950/40 border-emerald-500/40 text-emerald-300';
-                pillQz.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Quiz: 2/2 Passed</span>';
+                pillQz.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span><span>Quiz: Passed</span>';
             } else {
                 pillQz.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono border bg-slate-950 border-slate-800 text-slate-400';
                 pillQz.innerHTML = `<span class="w-2 h-2 rounded-full bg-slate-600"></span><span>Quiz: ${passedCount}/2</span>`;
             }
         }
 
-        // Gatekeeper Checklist Statuses in Stage 3
+        // Checklist Statuses in Stage 4
         const sbState = document.getElementById('gate-sandbox-state');
         const sbIcon = document.getElementById('gate-sandbox-icon');
         const qzState = document.getElementById('gate-quiz-state');
@@ -522,7 +599,7 @@ export class UIRenderer {
                 qzState.className = 'text-[10px] font-mono font-bold text-emerald-400';
             } else {
                 qzIcon.className = 'w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-slate-600';
-                qzState.textContent = `${passedCount}/2 PASSED`;
+                qzState.textContent = `${passedCount}/2 CORRECT`;
                 qzState.className = 'text-[10px] font-mono text-slate-500';
             }
         }
@@ -577,7 +654,7 @@ export class UIRenderer {
         const unlocked = this.stateManager.isLabComplete(lab) || this.stateManager.state.exploreMode;
         if (!unlocked) {
             event.preventDefault();
-            this.showToast('Launchpad Locked', 'Exfiltrate /etc/passwd in the X-Ray Sandbox and pass the 2 quiz questions first (or enable Explore Mode).', 'amber');
+            this.showToast('Launchpad Locked', 'Exfiltrate /etc/passwd in the X-Ray Sandbox and answer the 2 quiz questions first (or enable Explore Mode).', 'amber');
         }
     }
 
@@ -611,7 +688,7 @@ export class UIRenderer {
     }
 
     // ==========================================
-    // STAGE 4: BUG BOUNTY ARENA RENDERER
+    // EXPLOIT PLAYGROUND RENDERER
     // ==========================================
     isArenaUnlocked(index) {
         if (index === 0) return true;
@@ -658,7 +735,7 @@ export class UIRenderer {
 
                 if (canon === scenario.targetFile && !st.solved) {
                     st.solved = true;
-                    this.showToast(`Target Compromised: ${scenario.name}`, 'Flag file exfiltrated! Next real-world target unlocked.', 'emerald');
+                    this.showToast(`Target Compromised: ${scenario.name}`, 'Target file exfiltrated! Next target unlocked.', 'emerald');
                 }
             } else {
                 st.lastStatus = '404 Not Found';
@@ -668,6 +745,7 @@ export class UIRenderer {
 
         this.stateManager.save();
         this.renderArena();
+        this.renderSidebar();
     }
 
     renderArena() {
@@ -678,7 +756,7 @@ export class UIRenderer {
 
         const solvedTotal = this.arenaConfig.filter(s => this.stateManager.getArenaState(s).solved).length;
         if (badgeEl) {
-            badgeEl.textContent = `${solvedTotal} / ${this.arenaConfig.length} Targets Compromised`;
+            badgeEl.textContent = `${solvedTotal} / ${this.arenaConfig.length} Targets Solved`;
         }
 
         tabsEl.innerHTML = this.arenaConfig.map((sc, idx) => {
@@ -698,7 +776,7 @@ export class UIRenderer {
           <div class="flex items-center justify-between mb-1">
             <span class="font-mono text-[10px] font-bold ${isActive ? 'text-rose-400' : 'text-slate-500'}">${sc.stage}</span>
             ${st.solved
-                    ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300">PWNED</span>'
+                    ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-emerald-500/20 text-emerald-300">SOLVED</span>'
                     : unlocked
                         ? '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-cyan-500/15 text-cyan-300">ACTIVE</span>'
                         : '<span class="px-1.5 py-0.5 rounded text-[9px] font-mono bg-slate-800 text-slate-500">LOCKED</span>'}
@@ -739,58 +817,64 @@ export class UIRenderer {
         <div class="flex items-center gap-3">
           <span class="text-[11px] font-mono text-slate-400">Attempts: <strong class="text-slate-200">${activeSt.attempts}</strong></span>
           <button id="arena-hint-btn" type="button" class="px-2.5 py-1 rounded text-[11px] font-mono bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 transition-colors">
-            ${activeSt.hintOpen ? 'Hide Recon Hint' : 'Recon Hint'}
+            ${activeSt.hintOpen ? 'Hide Hint' : 'Show Hint'}
           </button>
         </div>
       </div>
 
-      <div class="p-4 sm:p-5 space-y-4">
-        <!-- Mission Brief & Scope Box -->
+      <div class="p-5 sm:p-6 space-y-5">
+        <!-- Mission Brief & Target Scope Box -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div class="lg:col-span-8 p-3.5 rounded-xl bg-slate-900/80 border border-slate-800">
-            <div class="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold mb-1">Target Brief</div>
+          <div class="lg:col-span-8 p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+            <div class="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold mb-1">Target Mission</div>
             <p class="text-xs text-slate-300 leading-relaxed">${escapeHtml(activeSc.missionText)}</p>
           </div>
-          <div class="lg:col-span-4 p-3.5 rounded-xl bg-slate-900/80 border border-slate-800 font-mono text-[11px] space-y-1.5">
-            <div><span class="text-slate-500">Web Root:</span> <span class="text-amber-300">${escapeHtml(activeSc.baseDir)}</span></div>
-            <div><span class="text-slate-500">Target:</span> <span class="text-emerald-400">${escapeHtml(activeSc.targetFile)}</span></div>
+          <div class="lg:col-span-4 p-4 rounded-xl bg-slate-900/80 border border-slate-800 font-mono text-[11px] space-y-1.5">
+            <div><span class="text-slate-500">Base Root:</span> <span class="text-amber-300">${escapeHtml(activeSc.baseDir)}</span></div>
+            <div><span class="text-slate-500">Target File:</span> <span class="text-emerald-400">${escapeHtml(activeSc.targetFile)}</span></div>
           </div>
         </div>
 
         ${activeSt.hintOpen ? `
-          <div class="p-3 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200/90 flex items-start gap-2">
-            <span class="font-mono font-bold text-amber-400">[RECON]</span>
+          <div class="p-3.5 rounded-xl bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200/90 flex items-start gap-2">
+            <span class="font-mono font-bold text-amber-400">[HINT]</span>
             <span>${escapeHtml(activeSc.hintText)}</span>
           </div>
         ` : ''}
 
         <!-- Free-Input Payload Bar (Zero Preset Buttons) -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 flex-1 focus-within:border-rose-500 transition-colors">
-            <span class="text-xs font-mono font-bold text-rose-400 mr-2 select-none">${activeSc.method}</span>
-            <span class="text-xs font-mono text-slate-400 select-none">${escapeHtml(activeSc.endpointPrefix)}</span>
-            <input
-              id="arena-payload-input"
-              type="text"
-              value="${escapeHtml(activeSt.lastInput)}"
-              autocomplete="off"
-              spellcheck="false"
-              placeholder="Type your raw path payload..."
-              class="bg-transparent border-none outline-none text-xs sm:text-sm font-mono text-white flex-1 min-w-0 ml-0.5"
-            />
+        <div class="space-y-1.5">
+          <div class="text-[11px] font-mono text-slate-400 flex items-center justify-between">
+            <span>Craft & Send Raw Request Parameter:</span>
+            <span class="text-slate-500">Press Enter or click Fire Request</span>
           </div>
-          <button id="arena-submit-btn" type="button" class="px-5 py-2.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold text-xs sm:text-sm transition-colors shrink-0">
-            Fire Request
-          </button>
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <div class="flex items-center bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 flex-1 focus-within:border-rose-500 transition-colors">
+              <span class="text-xs font-mono font-bold text-rose-400 mr-2 select-none">${activeSc.method}</span>
+              <span class="text-xs font-mono text-slate-400 select-none">${escapeHtml(activeSc.endpointPrefix)}</span>
+              <input
+                id="arena-payload-input"
+                type="text"
+                value="${escapeHtml(activeSt.lastInput)}"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Type your raw path payload..."
+                class="bg-transparent border-none outline-none text-xs sm:text-sm font-mono text-white flex-1 min-w-0 ml-0.5"
+              />
+            </div>
+            <button id="arena-submit-btn" type="button" class="px-6 py-2.5 rounded-lg bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold text-xs sm:text-sm transition-colors shrink-0">
+              Fire Request
+            </button>
+          </div>
         </div>
 
         <!-- Simulated Server Response -->
         <div class="rounded-xl bg-slate-900/90 border border-slate-800 overflow-hidden">
-          <div class="px-3.5 py-2 border-b border-slate-800 flex items-center justify-between">
+          <div class="px-3.5 py-2.5 border-b border-slate-800 flex items-center justify-between">
             <span class="text-[11px] font-mono text-slate-400">Target HTTP Response</span>
             <span class="px-2 py-0.5 rounded font-mono text-[11px] font-bold ${statusBadgeClass}">${escapeHtml(activeSt.lastStatus)}</span>
           </div>
-          <pre class="p-3.5 font-mono text-xs text-slate-200 whitespace-pre-wrap overflow-x-auto max-h-[180px] overflow-y-auto">${escapeHtml(activeSt.lastOutput)}</pre>
+          <pre class="p-4 font-mono text-xs text-slate-200 whitespace-pre-wrap overflow-x-auto max-h-[220px] overflow-y-auto">${escapeHtml(activeSt.lastOutput)}</pre>
         </div>
       </div>
     `;
@@ -816,7 +900,7 @@ export class UIRenderer {
         this.stateManager.resetAllProgress(this.moduleConfig.labs);
         this.selectLab(this.activeLabIndex);
         this.renderArena();
-        this.showToast('Progress Reset', 'All sandbox, quiz pool, and Bug Bounty Arena progress cleared.', 'cyan');
+        this.showToast('Progress Reset', 'All sandbox, quiz, and Exploit Playground progress cleared.', 'cyan');
     }
 
     // ==========================================

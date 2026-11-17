@@ -1,6 +1,6 @@
 /**
  * QuizEngine
- * Randomized 2-of-5 question gatekeeper quiz sampler and grading engine.
+ * Logic Quiz component displaying 2 questions with instantaneous feedback and shuffle support.
  */
 
 export function escapeHtml(str) {
@@ -34,7 +34,7 @@ export class QuizEngine {
         });
 
         if (scoreLabel) {
-            scoreLabel.textContent = `${passedCount} / 2 Passed`;
+            scoreLabel.textContent = `${passedCount} / 2 Answered Correctly`;
         }
 
         container.innerHTML = sampledIndices.map((poolIdx, displayIdx) => {
@@ -74,7 +74,6 @@ export class QuizEngine {
             <div class="text-xs font-semibold text-slate-100">
               <span class="font-mono text-purple-400 mr-1.5">Q${displayIdx + 1}.</span>${escapeHtml(q.question)}
             </div>
-            <span class="text-[10px] font-mono text-slate-600 shrink-0">#${poolIdx + 1}/5</span>
           </div>
           <div class="space-y-2">
             ${optionsHtml}
@@ -90,7 +89,7 @@ export class QuizEngine {
 
         // Wire event listeners
         container.querySelectorAll('.quiz-option-btn').forEach(btn => {
-            btn.onclick = (e) => {
+            btn.onclick = () => {
                 const pIdx = parseInt(btn.getAttribute('data-pool-idx'), 10);
                 const oIdx = parseInt(btn.getAttribute('data-option-idx'), 10);
                 if (typeof onAnswer === 'function') {

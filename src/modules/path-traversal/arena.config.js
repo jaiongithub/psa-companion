@@ -1,13 +1,13 @@
 /**
- * Bug Bounty Arena Configuration: Directory & Path Traversal
- * Contains 3 progressive real-world simulation targets with raw input evaluation.
+ * Exploit Playground Configuration: Directory & Path Traversal
+ * Practical mini exploit playground with 3 progressive targets requiring raw user-crafted input.
  */
 import { safeUrlDecode, resolvePosixPath } from '../../engines/posix-vfs-engine.js';
 
 export const arenaScenarios = [
     {
-        id: 'arena-1',
-        stage: 'STAGE 01',
+        id: 'target-1',
+        stage: 'TARGET 01',
         name: 'ShopStream Media CDN',
         domain: 'cdn.shopstream.internal',
         method: 'GET',
@@ -15,8 +15,8 @@ export const arenaScenarios = [
         defaultInput: 'hero-sneaker.webp',
         baseDir: '/srv/shopstream/public/assets/',
         targetFile: '/srv/shopstream/config/database.yml',
-        missionText: 'You are auditing an e-commerce media CDN endpoint. Escape the public assets directory and exfiltrate the application database configuration at /srv/shopstream/config/database.yml.',
-        hintText: 'Notice the base directory is /srv/shopstream/public/assets/ (one level inside /srv/shopstream/). Traverse up two levels into config/database.yml.',
+        missionText: 'Audit this e-commerce media CDN endpoint. Escape the public assets directory and read the application database configuration at /srv/shopstream/config/database.yml.',
+        hintText: 'The web root is /srv/shopstream/public/assets/ (two levels below /srv/shopstream/). Climb up two levels ("../") into config/database.yml.',
         fs: {
             '/srv/shopstream/public/assets/hero-sneaker.webp': '[BINARY WEBP IMAGE: 42.8 KB - ShopStream Product Asset]',
             '/srv/shopstream/config/database.yml': 'production:\n  adapter: postgresql\n  host: db-prod.shopstream.internal\n  username: shop_admin\n  password: <REDACTED_SECRET_TOKEN>',
@@ -30,8 +30,8 @@ export const arenaScenarios = [
         }
     },
     {
-        id: 'arena-2',
-        stage: 'STAGE 02',
+        id: 'target-2',
+        stage: 'TARGET 02',
         name: 'FinVault Invoice Portal',
         domain: 'portal.finvault.internal',
         method: 'POST',
@@ -39,8 +39,8 @@ export const arenaScenarios = [
         defaultInput: 'statements/2026/october.pdf',
         baseDir: '/var/finvault/data/',
         targetFile: '/var/finvault/secrets/audit_master.key',
-        missionText: 'FinVault enforces that the path parameter must start with "statements/" and strips "../" once. Escape the statements folder to read /var/finvault/secrets/audit_master.key.',
-        hintText: 'Preserve the required "statements/" prefix at the start, then use nested traversal tokens (e.g., "....//") so a single-pass strip leaves valid "../" segments.',
+        missionText: 'FinVault requires the path parameter to start with "statements/" and strips "../" once. Escape the statements folder to read /var/finvault/secrets/audit_master.key.',
+        hintText: 'Keep the required "statements/" prefix at the start, then use nested traversal sequences (like "....//") so a single-pass strip collapses into valid "../" segments.',
         fs: {
             '/var/finvault/data/statements/2026/october.pdf': '%PDF-1.7 FinVault Monthly Account Statement (Acct #8841)',
             '/var/finvault/secrets/audit_master.key': '-----BEGIN FINVAULT AUDIT MASTER KEY-----\nFV-KEY-9948-2026-ALPHA-CONFIDENTIAL\n-----END FINVAULT AUDIT MASTER KEY-----'
@@ -61,8 +61,8 @@ export const arenaScenarios = [
         }
     },
     {
-        id: 'arena-3',
-        stage: 'STAGE 03',
+        id: 'target-3',
+        stage: 'TARGET 03',
         name: 'CloudDocs Legacy Exporter',
         domain: 'legacy.clouddocs.internal',
         method: 'GET',
@@ -70,8 +70,8 @@ export const arenaScenarios = [
         defaultInput: 'q3-summary.pdf',
         baseDir: '/opt/clouddocs/reports/',
         targetFile: '/opt/clouddocs/.env',
-        missionText: 'This legacy C-backed exporter enforces that "doc" ends with ".pdf" before passing the string to a C file-open syscall. Exfiltrate /opt/clouddocs/.env.',
-        hintText: 'Traverse one directory up from /opt/clouddocs/reports/ to .env, and terminate the C string early with a URL-encoded null byte (%00) before ".pdf".',
+        missionText: 'This legacy C-backed exporter requires "doc" to end with ".pdf" before passing the path to an OS file syscall. Exfiltrate /opt/clouddocs/.env.',
+        hintText: 'Climb one folder up from /opt/clouddocs/reports/ to .env, and terminate the string early with a URL-encoded null byte (%00) followed by ".pdf".',
         fs: {
             '/opt/clouddocs/reports/q3-summary.pdf': '%PDF-1.5 CloudDocs Q3 Executive Summary Report',
             '/opt/clouddocs/.env': 'APP_ENV=production\nJWT_SIGNING_SECRET=cd_live_98a7f6e5d4c3b2a1\nAWS_BUCKET=clouddocs-private-vault'
@@ -82,7 +82,7 @@ export const arenaScenarios = [
                 return {
                     blocked: true,
                     canonical: null,
-                    reason: '403 Forbidden: Legacy exporter only accepts documents ending in ".pdf".'
+                    reason: '403 Forbidden: Exporter only accepts documents ending in ".pdf".'
                 };
             }
             const nullIdx = decoded.indexOf('\0');

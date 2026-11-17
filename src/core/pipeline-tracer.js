@@ -1,6 +1,7 @@
 /**
  * PipelineTracer
  * Mutating packet animation engine across the 4-node processing pipeline.
+ * Paced comfortably so learners can observe and read the payload mutation at each step.
  */
 
 export class PipelineTracer {
@@ -58,6 +59,9 @@ export class PipelineTracer {
 
         packet.style.opacity = '1';
 
+        // Slowed down to 1250ms per node for comfortable reading
+        const STEP_INTERVAL_MS = 1250;
+
         stages.forEach((st, idx) => {
             setTimeout(() => {
                 packet.style.left = st.left;
@@ -70,9 +74,9 @@ export class PipelineTracer {
                     nodeEl.classList.add('ring-2', 'ring-cyan-400', 'scale-[1.02]');
                     setTimeout(() => {
                         nodeEl.classList.remove('ring-2', 'ring-cyan-400', 'scale-[1.02]');
-                    }, 420);
+                    }, 1000);
                 }
-            }, idx * 480);
+            }, idx * STEP_INTERVAL_MS);
         });
     }
 

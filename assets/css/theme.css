@@ -48,9 +48,9 @@ pre,
     animation: nodePulse 1.8s infinite;
 }
 
-/* Traveling Packet Transition */
+/* Traveling Packet Transition - Slowed down and eased for comfortable reading */
 #traveling-packet {
-    transition: left 0.55s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease, border-color 0.3s ease, background-color 0.3s ease;
+    transition: left 0.85s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease, border-color 0.4s ease, background-color 0.4s ease;
 }
 
 /* Custom Scrollbars */

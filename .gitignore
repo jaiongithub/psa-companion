@@ -1,3 +1,9 @@
+# Reference files
+MVP.html
+
+# Local scripts
+*.py
+
 # OS Files
 .DS_Store
 Thumbs.db
@@ -7,5 +13,5 @@ desktop.ini
 .vscode/
 .idea/
 
-# Logs & scratch
+# Logs & temp
 *.log
