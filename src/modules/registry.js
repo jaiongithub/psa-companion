@@ -5,6 +5,9 @@
 import { moduleMetadata as pathTraversalMeta, fundamentals as pathTraversalFundamentals, labs as pathTraversalLabs } from './path-traversal/module.config.js';
 import { arenaScenarios as pathTraversalArena } from './path-traversal/arena.config.js';
 
+import { moduleMetadata as commandInjectionMeta, fundamentals as commandInjectionFundamentals, labs as commandInjectionLabs } from './command-injection/module.config.js';
+import { arenaScenarios as commandInjectionArena } from './command-injection/arena.config.js';
+
 export const MODULE_REGISTRY = {
     'path-traversal': {
         metadata: pathTraversalMeta,
@@ -14,11 +17,19 @@ export const MODULE_REGISTRY = {
         motionGraphicType: 'confinement-boundary',
         status: 'available'
     },
+    'command-injection': {
+        metadata: commandInjectionMeta,
+        fundamentals: commandInjectionFundamentals,
+        labs: commandInjectionLabs,
+        arena: commandInjectionArena,
+        motionGraphicType: 'command-injection-boundary',
+        status: 'available'
+    },
     'sql-injection': {
         metadata: {
             slug: 'sql-injection',
             name: 'SQL Injection',
-            tagline: 'Database manipulation, UNION extraction, blind time-delays & out-of-band exfiltration',
+            tagline: 'Database query manipulation, UNION extraction, blind time-delays & out-of-band exfiltration',
             category: 'Server-Side Vulnerabilities',
             difficulty: 'PRACTITIONER',
             labCount: 18,

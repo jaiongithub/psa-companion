@@ -5,6 +5,7 @@
 import { escapeHtml } from './quiz-engine.js';
 import { DEFAULT_VFS_TREE_NODES } from '../engines/posix-vfs-engine.js';
 import { ConfinementBoundaryMotionGraphic } from '../../assets/motion-graphics/confinement-boundary.js';
+import { CommandInjectionMotionGraphic } from '../../assets/motion-graphics/command-injection-boundary.js';
 
 export class UIRenderer {
     constructor({ moduleConfig, arenaConfig, stateManager, pipelineTracer, quizEngine, router }) {
@@ -26,17 +27,26 @@ export class UIRenderer {
         this.currentView = initialView;
         this.stateManager.load(this.moduleConfig.labs);
 
-        // Mount motion graphic component
-        this.motionGraphic = new ConfinementBoundaryMotionGraphic('normal-motion-graphic-host', {
-            trustedRoot: '/var/www/images/',
-            targetFile: '/etc/passwd',
-            normalFile: '218.png'
-        });
+        // Mount modular motion graphic component
+        const motionType = this.moduleConfig.moduleMetadata.motionGraphicType ||
+            (this.moduleConfig.moduleMetadata.slug === 'command-injection' ? 'command-injection-boundary' : 'confinement-boundary');
+
+        if (motionType === 'command-injection-boundary') {
+            this.motionGraphic = new CommandInjectionMotionGraphic('normal-motion-graphic-host');
+        } else {
+            this.motionGraphic = new ConfinementBoundaryMotionGraphic('normal-motion-graphic-host', {
+                trustedRoot: '/var/www/images/',
+                targetFile: '/etc/passwd',
+                normalFile: '218.png'
+            });
+        }
         this.motionGraphic.render();
 
         // Render persistent module headers
         this.renderModuleHeader();
         this.renderCommonMission();
+        this.renderFundamentals();
+        this.renderPipelineLabels();
 
         if (this.currentView === 'playground') {
             this.showPlaygroundView();
@@ -93,6 +103,36 @@ export class UIRenderer {
         <span class="text-[10px] text-slate-500">${escapeHtml(mission.targetLabel)}</span>
       </div>
     `;
+    }
+
+    renderFundamentals() {
+        const fund = this.moduleConfig.fundamentals;
+        const container = document.getElementById('fundamentals-pillars');
+        if (!container || !fund || !fund.pillars) return;
+
+        container.innerHTML = fund.pillars.map(p => `
+          <div class="p-3.5 rounded-xl bg-slate-950/90 border border-slate-800/90">
+            <div class="text-[11px] font-mono font-bold uppercase tracking-wider ${p.color || 'text-sky-400'} mb-1">
+              ${escapeHtml(p.number)}. ${escapeHtml(p.title)}
+            </div>
+            <p class="text-xs text-slate-300 leading-relaxed">
+              ${p.description}
+            </p>
+          </div>
+        `).join('');
+    }
+
+    renderPipelineLabels() {
+        const isCI = this.moduleConfig.moduleMetadata.slug === 'command-injection';
+        const l1 = document.getElementById('pipe-label-1');
+        const l2 = document.getElementById('pipe-label-2');
+        const l3 = document.getElementById('pipe-label-3');
+        const l4 = document.getElementById('pipe-label-4');
+
+        if (l1) l1.textContent = isCI ? '01. HTTP Parameter' : '01. HTTP Query';
+        if (l2) l2.textContent = isCI ? '02. Shell Sanitizer' : '02. Filter / Decode';
+        if (l3) l3.textContent = isCI ? '03. Shell Command Join' : '03. Path Join';
+        if (l4) l4.textContent = isCI ? '04. OS Execution (/bin/sh)' : '04. OS Syscall open()';
     }
 
     selectLab(index, updateHistory = true) {
@@ -154,7 +194,12 @@ export class UIRenderer {
             this.stateManager.state.hintVisible = false;
         }
 
-        // Stage 3: Default input & Clean Probe Chips
+        // Stage 3: Dynamic Request Builder Bar
+        const methodBadge = document.getElementById('http-method-badge');
+        const endpointPrefix = document.getElementById('http-endpoint-prefix');
+        if (methodBadge) methodBadge.textContent = lab.httpMethod || 'GET';
+        if (endpointPrefix) endpointPrefix.textContent = lab.endpointPrefix || '/image?filename=';
+
         const defaultProbe = lab.probes[0]?.value || '218.png';
         const payloadInput = document.getElementById('payload-input');
         if (payloadInput) payloadInput.value = defaultProbe;
@@ -213,7 +258,6 @@ export class UIRenderer {
         const container = document.getElementById('lab-list');
         if (!container) return;
 
-        // Render Labs 1-6
         const labsHtml = this.moduleConfig.labs.map((lab, idx) => {
             const isActive = this.currentView === 'lab' && idx === this.activeLabIndex;
             const complete = this.stateManager.isLabComplete(lab);
@@ -352,11 +396,20 @@ export class UIRenderer {
         const result = lab.simulate(rawInput);
         const prog = this.stateManager.getLabProgress(lab.id);
 
-        // Mark sandbox exfiltration solved if /etc/passwd was hit
-        if (!result.blocked && result.canonicalPath === '/etc/passwd' && !prog.sandboxSolved) {
+        // Check if exploit / target was reached
+        const isExploitHit = !result.blocked && (
+            result.canonicalPath === '/etc/passwd' ||
+            result.isTarget ||
+            result.steps?.some(s => s.isTarget)
+        );
+
+        if (isExploitHit && !prog.sandboxSolved) {
             prog.sandboxSolved = true;
             this.stateManager.save();
-            this.showToast('Target File Exfiltrated!', 'Successfully read /etc/passwd. Answer the quiz to unlock the official lab!', 'emerald');
+            const successMsg = this.moduleConfig.moduleMetadata.slug === 'command-injection'
+                ? 'Target executed! Identified active OS identity. Answer the quiz to unlock the official lab!'
+                : 'Successfully read /etc/passwd. Answer the quiz to unlock the official lab!';
+            this.showToast('Target Executed!', successMsg, 'emerald');
             this.renderSidebar();
             this.updateReadinessUI();
         }
@@ -399,7 +452,7 @@ export class UIRenderer {
             if (result.blocked) {
                 verdictBadge.textContent = 'BLOCKED BY FILTER';
                 verdictBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-rose-500/20 text-rose-300';
-            } else if (result.canonicalPath === '/etc/passwd') {
+            } else if (isExploitHit) {
                 verdictBadge.textContent = 'EXPLOIT SUCCESSFUL';
                 verdictBadge.className = 'px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300';
             } else {
@@ -433,19 +486,34 @@ export class UIRenderer {
         // 3. Update Pipeline Static Nodes
         this.pipelineTracer.updateStaticNodes({ rawInput, result });
 
-        // 4. Virtual Filesystem & HTTP Response
+        // 4. Output / HTTP Response Inspector
         const statusBadge = document.getElementById('http-status-badge');
         const previewEl = document.getElementById('http-response-preview');
 
         if (result.blocked) {
             if (statusBadge) {
-                statusBadge.textContent = '403 Forbidden';
+                statusBadge.textContent = result.statusCode || '403 Forbidden';
                 statusBadge.className = 'px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-500/20 text-rose-300';
             }
             if (previewEl) {
-                previewEl.textContent = `HTTP/1.1 403 Forbidden\nContent-Type: text/plain; charset=utf-8\nX-Content-Type-Options: nosniff\n\n${result.blockReason}`;
+                previewEl.textContent = `HTTP/1.1 403 Forbidden\nContent-Type: text/plain; charset=utf-8\nX-Content-Type-Options: nosniff\n\n${result.blockReason || 'Request blocked by input filter.'}`;
+            }
+        } else if (result.output) {
+            // Direct stdout, latency logs, or collaborator records
+            if (statusBadge) {
+                if (isExploitHit) {
+                    statusBadge.textContent = '200 OK (FLAG HIT)';
+                    statusBadge.className = 'px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-emerald-500/30 text-emerald-300 border border-emerald-500/40';
+                } else {
+                    statusBadge.textContent = '200 OK';
+                    statusBadge.className = 'px-2 py-0.5 rounded text-[11px] font-mono bg-emerald-500/20 text-emerald-300';
+                }
+            }
+            if (previewEl) {
+                previewEl.textContent = result.output;
             }
         } else {
+            // Path traversal file outputs
             const canon = result.canonicalPath;
             const isTarget = canon === '/etc/passwd';
 
@@ -492,8 +560,12 @@ export class UIRenderer {
             }
         }
 
-        // 5. Render Virtual Filesystem Tree
-        this.renderVfsTree(result.canonicalPath, result.traversalSteps);
+        // 5. Render Virtual Tree (POSIX Filesystem or OS Shell Process Tree)
+        if (this.moduleConfig.moduleMetadata.slug === 'command-injection') {
+            this.renderProcessTree(lab, rawInput, result, isExploitHit);
+        } else {
+            this.renderVfsTree(result.canonicalPath, result.traversalSteps);
+        }
 
         // 6. Mutating Packet Animation
         if (userTriggered) {
@@ -501,7 +573,93 @@ export class UIRenderer {
         }
     }
 
+    renderProcessTree(lab, rawInput, result, isExploitHit) {
+        const titleEl = document.getElementById('vfs-tree-title');
+        const subtitleEl = document.getElementById('vfs-tree-subtitle');
+        const treeEl = document.getElementById('vfs-tree');
+
+        if (titleEl) titleEl.textContent = 'OS Shell Process Tree';
+        if (subtitleEl) subtitleEl.textContent = 'Live Process Spawner';
+        if (!treeEl) return;
+
+        const isWhoami = /whoami/.test(rawInput);
+        const isPing = /ping/.test(rawInput);
+        const isNslookup = /nslookup/.test(rawInput);
+        const isSleep = /sleep/.test(rawInput);
+        const isCat = /cat/.test(rawInput);
+
+        const injectedCmd = isWhoami ? 'whoami' : (isPing ? 'ping' : (isNslookup ? 'nslookup' : (isSleep ? 'sleep' : (isCat ? 'cat' : null))));
+
+        treeEl.innerHTML = `
+          <div class="space-y-1 font-mono text-xs">
+            <!-- Root Systemd / Init -->
+            <div class="px-2 py-1 rounded border border-transparent text-slate-500 flex items-center justify-between">
+              <div class="flex items-center gap-1.5 truncate">
+                <span>⚙️</span>
+                <span>[PID 1] /sbin/init (systemd)</span>
+              </div>
+              <span class="text-[9px] text-slate-600">system</span>
+            </div>
+
+            <!-- Web App Service -->
+            <div style="padding-left: 18px" class="pr-2 py-1 rounded border border-transparent text-slate-300 flex items-center justify-between">
+              <div class="flex items-center gap-1.5 truncate">
+                <span>⚡</span>
+                <span>[PID 2415] web-service (${escapeHtml(lab.backendFile)})</span>
+              </div>
+              <span class="text-[9px] text-emerald-400/80">service</span>
+            </div>
+
+            <!-- Spawned Shell Context -->
+            <div style="padding-left: 32px" class="pr-2 py-1 rounded border border-slate-800 bg-slate-900/60 flex items-center justify-between ${result.blocked ? 'text-rose-400' : 'text-amber-300 font-semibold'}">
+              <div class="flex items-center gap-1.5 truncate">
+                <span>🐚</span>
+                <span class="truncate">[PID 3102] /bin/sh -c "${escapeHtml(result.joinedPath || '')}"</span>
+              </div>
+              <span class="text-[9px] px-1.5 py-0.5 rounded ${result.blocked ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'}">
+                ${result.blocked ? 'BLOCKED' : 'INVOKED'}
+              </span>
+            </div>
+
+            <!-- Intended Primary Command -->
+            <div style="padding-left: 46px" class="pr-2 py-1 rounded border border-transparent text-slate-400 flex items-center justify-between">
+              <div class="flex items-center gap-1.5 truncate">
+                <span>▸</span>
+                <span>[PID 3103] ${escapeHtml(lab.backendFile.includes('stock') ? 'stockreport.sh' : 'mail -s "..."')}</span>
+              </div>
+              <span class="text-[9px] text-slate-500">primary</span>
+            </div>
+
+            <!-- Injected Rogue Child Process -->
+            ${injectedCmd ? `
+              <div style="padding-left: 46px" class="pr-2 py-1 rounded border ${isExploitHit ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-bold' : 'bg-rose-500/15 border-rose-500/40 text-rose-300 font-semibold'} flex items-center justify-between">
+                <div class="flex items-center gap-1.5 truncate">
+                  <span>💀</span>
+                  <span>[PID 3104] ${escapeHtml(injectedCmd)}</span>
+                </div>
+                <span class="text-[9px] px-1.5 py-0.5 rounded ${isExploitHit ? 'bg-emerald-500/25 text-emerald-300' : 'bg-rose-500/25 text-rose-300'}">
+                  ${isExploitHit ? 'TARGET HIT' : 'HIJACKED'}
+                </span>
+              </div>
+            ` : `
+              <div style="padding-left: 46px" class="pr-2 py-1 rounded border border-transparent text-slate-600 flex items-center justify-between">
+                <div class="flex items-center gap-1.5 truncate">
+                  <span>▫️</span>
+                  <span class="italic">No secondary process spawned</span>
+                </div>
+                <span class="text-[9px] text-slate-600">quiescent</span>
+              </div>
+            `}
+          </div>
+        `;
+    }
+
     renderVfsTree(activeCanonical, traversalSteps = []) {
+        const titleEl = document.getElementById('vfs-tree-title');
+        const subtitleEl = document.getElementById('vfs-tree-subtitle');
+        if (titleEl) titleEl.textContent = 'Linux Filesystem State';
+        if (subtitleEl) subtitleEl.textContent = 'Live Tree';
+
         const treeEl = document.getElementById('vfs-tree');
         if (!treeEl) return;
         const visitedDirs = new Set(traversalSteps.map(s => s.current));
@@ -574,6 +732,13 @@ export class UIRenderer {
         }
 
         // Checklist Statuses in Stage 4
+        const sbDesc = document.getElementById('gate-sandbox-desc');
+        if (sbDesc) {
+            sbDesc.textContent = this.moduleConfig.moduleMetadata.slug === 'command-injection'
+                ? 'Execute whoami / target probe'
+                : 'Exfiltrate /etc/passwd';
+        }
+
         const sbState = document.getElementById('gate-sandbox-state');
         const sbIcon = document.getElementById('gate-sandbox-icon');
         const qzState = document.getElementById('gate-quiz-state');
@@ -582,7 +747,7 @@ export class UIRenderer {
         if (sbState && sbIcon) {
             if (prog.sandboxSolved) {
                 sbIcon.className = 'w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400';
-                sbState.textContent = 'EXFILTRATED';
+                sbState.textContent = 'SOLVED';
                 sbState.className = 'text-[10px] font-mono font-bold text-emerald-400';
             } else {
                 sbIcon.className = 'w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-slate-600';
@@ -654,7 +819,7 @@ export class UIRenderer {
         const unlocked = this.stateManager.isLabComplete(lab) || this.stateManager.state.exploreMode;
         if (!unlocked) {
             event.preventDefault();
-            this.showToast('Launchpad Locked', 'Exfiltrate /etc/passwd in the X-Ray Sandbox and answer the 2 quiz questions first (or enable Explore Mode).', 'amber');
+            this.showToast('Launchpad Locked', 'Complete the X-Ray Sandbox exploit and answer the 2 quiz questions first (or enable Explore Mode).', 'amber');
         }
     }
 
@@ -726,20 +891,21 @@ export class UIRenderer {
 
         if (evalResult.blocked) {
             st.lastStatus = '403 Forbidden';
-            st.lastOutput = `HTTP/1.1 403 Forbidden\nServer: ${scenario.domain}\n\n${evalResult.reason}`;
+            st.lastOutput = `HTTP/1.1 403 Forbidden\nServer: ${scenario.domain}\n\n${evalResult.reason || 'Blocked by input filter.'}`;
         } else {
             const canon = evalResult.canonical;
-            if (scenario.fs[canon]) {
-                st.lastStatus = '200 OK';
-                st.lastOutput = `HTTP/1.1 200 OK\nServer: ${scenario.domain}\nX-Canonical-Path: ${canon}\n\n${scenario.fs[canon]}`;
+            const isSolved = canon === scenario.targetFile ||
+                (scenario.fs && scenario.fs[canon] === scenario.targetFile) ||
+                (evalResult.output && evalResult.output.includes(scenario.targetFile));
 
-                if (canon === scenario.targetFile && !st.solved) {
-                    st.solved = true;
-                    this.showToast(`Target Compromised: ${scenario.name}`, 'Target file exfiltrated! Next target unlocked.', 'emerald');
-                }
-            } else {
-                st.lastStatus = '404 Not Found';
-                st.lastOutput = `HTTP/1.1 404 Not Found\nServer: ${scenario.domain}\n\nError: ENOENT: no such file '${canon}'`;
+            st.lastStatus = '200 OK';
+            st.lastOutput = evalResult.output || (scenario.fs && scenario.fs[canon]
+                ? `HTTP/1.1 200 OK\nServer: ${scenario.domain}\nX-Canonical-Path: ${canon}\n\n${scenario.fs[canon]}`
+                : `HTTP/1.1 200 OK\nServer: ${scenario.domain}\n\n${canon}`);
+
+            if (isSolved && !st.solved) {
+                st.solved = true;
+                this.showToast(`Target Compromised: ${scenario.name}`, 'Target flag exfiltrated! Next target unlocked.', 'emerald');
             }
         }
 
@@ -830,8 +996,8 @@ export class UIRenderer {
             <p class="text-xs text-slate-300 leading-relaxed">${escapeHtml(activeSc.missionText)}</p>
           </div>
           <div class="lg:col-span-4 p-4 rounded-xl bg-slate-900/80 border border-slate-800 font-mono text-[11px] space-y-1.5">
-            <div><span class="text-slate-500">Base Root:</span> <span class="text-amber-300">${escapeHtml(activeSc.baseDir)}</span></div>
-            <div><span class="text-slate-500">Target File:</span> <span class="text-emerald-400">${escapeHtml(activeSc.targetFile)}</span></div>
+            <div><span class="text-slate-500">Base Execution:</span> <span class="text-amber-300">${escapeHtml(activeSc.baseDir)}</span></div>
+            <div><span class="text-slate-500">Target Objective:</span> <span class="text-emerald-400">${escapeHtml(activeSc.targetFile)}</span></div>
           </div>
         </div>
 
@@ -855,10 +1021,10 @@ export class UIRenderer {
               <input
                 id="arena-payload-input"
                 type="text"
-                value="${escapeHtml(activeSt.lastInput)}"
+                value="${escapeHtml(activeSt.lastInput || activeSc.defaultInput || '')}"
                 autocomplete="off"
                 spellcheck="false"
-                placeholder="Type your raw path payload..."
+                placeholder="Type your raw payload..."
                 class="bg-transparent border-none outline-none text-xs sm:text-sm font-mono text-white flex-1 min-w-0 ml-0.5"
               />
             </div>
