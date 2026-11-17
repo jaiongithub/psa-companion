@@ -78,69 +78,258 @@
             Eliminate cognitive friction and black-box frustration. Master defense mechanisms with intuitive analogies, live packet traces, and interactive X-Ray sandboxes before tackling official PortSwigger labs.
         </p>
 
-        <!-- Dynamic Visual Bridge Animation -->
-        <div class="max-w-4xl mx-auto mt-10 p-5 sm:p-6 rounded-2xl bg-slate-900/80 border border-slate-800/90 shadow-xl overflow-hidden">
-            <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-3 px-1">
-                <span class="flex items-center gap-1.5 text-cyan-400 font-bold">
-                    <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
-                    Interactive Preparation
-                </span>
-                <span class="text-slate-500 hidden sm:inline">The Learning Bridge</span>
-                <span class="flex items-center gap-1.5 text-emerald-400 font-bold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                    Official PortSwigger Lab Mastery
-                </span>
-            </div>
+        <!-- DROP-IN HERO MOTION GRAPHIC CONTAINER (100% TEXTLESS BRIDGE + FLYING ROBOT METAPHOR) -->
+        <div class="w-full max-w-5xl mx-auto mt-10 rounded-3xl bg-slate-950/80 border border-slate-800/90 shadow-2xl shadow-cyan-500/5 backdrop-blur-md p-3 sm:p-6 relative overflow-hidden">
+            <!-- Ambient Radial Glows -->
+            <div class="pointer-events-none absolute left-10 bottom-6 w-64 h-64 rounded-full bg-cyan-500/10 blur-3xl"></div>
+            <div class="pointer-events-none absolute left-1/2 -translate-x-1/2 top-6 w-72 h-72 rounded-full bg-sky-500/10 blur-3xl"></div>
+            <div class="pointer-events-none absolute right-8 top-1/2 -translate-y-1/2 w-72 h-72 rounded-full bg-emerald-500/10 blur-3xl"></div>
 
-            <!-- SVG Bridge Architecture Visual -->
-            <div class="relative bg-slate-950 rounded-xl p-3 sm:p-4 border border-slate-800/70 overflow-hidden">
-                <svg viewBox="0 0 760 170" class="w-full h-auto select-none">
-                    <defs>
-                        <linearGradient id="bridgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.9" />
-                            <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.9" />
-                            <stop offset="100%" stop-color="#10b981" stop-opacity="0.9" />
-                        </linearGradient>
-                        <marker id="bridgeArrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                            <path d="M 0 1 L 10 5 L 0 9 z" fill="#10b981" />
-                        </marker>
-                    </defs>
+            <!-- Pure Graphical SVG Scene (Zero Text Elements) -->
+            <svg viewBox="0 0 900 390" class="w-full h-auto block select-none" aria-hidden="true">
+                <defs>
+                    <!-- Gradients -->
+                    <linearGradient id="visorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#22d3ee" />
+                        <stop offset="100%" stop-color="#10b981" />
+                    </linearGradient>
 
-                    <!-- Left: PSA Companion Preparation Pod -->
-                    <rect x="15" y="22" width="225" height="126" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="1.5" />
-                    <text x="30" y="46" fill="#38bdf8" font-size="11" font-family="JetBrains Mono" font-weight="bold">PSA COMPANION</text>
-                    <text x="30" y="66" fill="#94a3b8" font-size="10" font-family="Inter">✓ Intuitive Analogies & Concepts</text>
-                    <text x="30" y="86" fill="#94a3b8" font-size="10" font-family="Inter">✓ Live Mutating Packet Trace</text>
-                    <text x="30" y="106" fill="#94a3b8" font-size="10" font-family="Inter">✓ Server-Side X-Ray Sandbox</text>
-                    <text x="30" y="126" fill="#94a3b8" font-size="10" font-family="Inter">✓ Diagnostic Feedback & Quizzes</text>
+                    <linearGradient id="suitGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#1e293b" />
+                        <stop offset="100%" stop-color="#0f172a" />
+                    </linearGradient>
 
-                    <!-- Center: Interactive Bridge -->
-                    <rect x="290" y="48" width="180" height="74" rx="8" fill="#020617" stroke="#334155" stroke-width="1" />
-                    <text x="325" y="74" fill="#cbd5e1" font-size="10" font-family="JetBrains Mono" font-weight="bold">CONFIDENCE BRIDGE</text>
-                    <text x="312" y="93" fill="#64748b" font-size="9" font-family="JetBrains Mono">Zero Guesswork &bull; Verified</text>
-                    <text x="330" y="108" fill="#06b6d4" font-size="9" font-family="JetBrains Mono">Ready to Solve ↗</text>
+                    <linearGradient id="xrayConeGrad" x1="0%" y1="30%" x2="100%" y2="70%">
+                        <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.42" />
+                        <stop offset="60%" stop-color="#10b981" stop-opacity="0.16" />
+                        <stop offset="100%" stop-color="#10b981" stop-opacity="0.02" />
+                    </linearGradient>
 
-                    <!-- Right: Official PortSwigger Lab Target Pod -->
-                    <rect x="520" y="22" width="225" height="126" rx="10" fill="#062e24" fill-opacity="0.3" stroke="#10b981" stroke-width="1.5" />
-                    <text x="535" y="46" fill="#34d399" font-size="11" font-family="JetBrains Mono" font-weight="bold">PORTSWIGGER ACADEMY</text>
-                    <text x="535" y="66" fill="#cbd5e1" font-size="10" font-family="Inter">✓ Real Black-Box Target Lab</text>
-                    <text x="535" y="86" fill="#cbd5e1" font-size="10" font-family="Inter">✓ Official PortSwigger Infrastructure</text>
-                    <text x="535" y="106" fill="#cbd5e1" font-size="10" font-family="Inter">✓ Confident First-Attempt Solve</text>
-                    <text x="535" y="126" fill="#34d399" font-size="10" font-family="JetBrains Mono" font-weight="bold">✓ LAB SOLVED BADGE</text>
+                    <linearGradient id="bridgeBeamDown" x1="50%" y1="0%" x2="50%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.32" />
+                        <stop offset="100%" stop-color="#06b6d4" stop-opacity="0.02" />
+                    </linearGradient>
 
-                    <!-- Connecting Stream Paths -->
-                    <line x1="240" y1="85" x2="288" y2="85" stroke="url(#bridgeGradient)" stroke-width="2.5" class="animate-flow" />
-                    <line x1="470" y1="85" x2="515" y2="85" stroke="url(#bridgeGradient)" stroke-width="2.5" marker-end="url(#bridgeArrow)" class="animate-flow" />
+                    <linearGradient id="bridgeDeckGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="50%" stop-color="#22d3ee" />
+                        <stop offset="100%" stop-color="#10b981" />
+                    </linearGradient>
 
-                    <!-- Moving Data Packets across the bridge -->
-                    <circle r="4.5" fill="#38bdf8">
-                        <animateMotion dur="2.4s" repeatCount="indefinite" path="M 125 85 L 380 85 L 630 85" />
+                    <linearGradient id="platformLeftGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#1e293b" />
+                        <stop offset="100%" stop-color="#090d16" />
+                    </linearGradient>
+
+                    <linearGradient id="platformRightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#064e3b" stop-opacity="0.55" />
+                        <stop offset="100%" stop-color="#090d16" />
+                    </linearGradient>
+
+                    <linearGradient id="thrusterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stop-color="#38bdf8" />
+                        <stop offset="50%" stop-color="#22d3ee" stop-opacity="0.6" />
+                        <stop offset="100%" stop-color="#10b981" stop-opacity="0" />
+                    </linearGradient>
+
+                    <radialGradient id="targetAura" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#10b981" stop-opacity="0.28" />
+                        <stop offset="70%" stop-color="#06b6d4" stop-opacity="0.06" />
+                        <stop offset="100%" stop-color="#020617" stop-opacity="0" />
+                    </radialGradient>
+
+                    <!-- Soft Glow Filter -->
+                    <filter id="neonGlow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="4" result="blur" />
+                        <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+
+                    <!-- Clip Path for X-Ray Target Interior -->
+                    <clipPath id="xrayBoxClip">
+                        <rect x="675" y="110" width="160" height="150" rx="20" />
+                    </clipPath>
+                </defs>
+
+                <!-- =================================================================== -->
+                <!-- 1. THE TWO CLIFF PLATFORMS & THE LUMINOUS ARCH BRIDGE SPANNING THEM -->
+                <!-- =================================================================== -->
+                <!-- Deep Chasm Grid Hint -->
+                <line x1="210" y1="355" x2="690" y2="355" stroke="#1e293b" stroke-width="1" stroke-dasharray="3 9" />
+
+                <!-- LEFT PLATFORM: Learner Starting Node (Safe Sandbox Origin) -->
+                <g>
+                    <path d="M 36 286 H 215 L 195 365 H 36 Z" fill="url(#platformLeftGrad)" stroke="#334155" stroke-width="1.8" />
+                    <!-- Glowing Top Rim -->
+                    <line x1="36" y1="286" x2="215" y2="286" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" />
+                    <!-- Anchor Pylon -->
+                    <rect x="176" y="254" width="26" height="32" rx="6" fill="#0f172a" stroke="#38bdf8" stroke-width="1.8" />
+                    <circle cx="189" cy="270" r="4" fill="#38bdf8" filter="url(#neonGlow)" />
+
+                    <!-- Starting Learner Terminal Icon on Left Platform -->
+                    <rect x="64" y="218" width="88" height="56" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="1.6" />
+                    <circle cx="77" cy="230" r="2.5" fill="#f43f5e" />
+                    <circle cx="85" cy="230" r="2.5" fill="#f59e0b" />
+                    <circle cx="93" cy="230" r="2.5" fill="#10b981" />
+                    <path d="M 78 248 L 87 255 L 78 262" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                    <line x1="94" y1="262" x2="116" y2="262" stroke="#22d3ee" stroke-width="2.2" stroke-linecap="round" />
+                </g>
+
+                <!-- RIGHT PLATFORM: Target Fortress Destination -->
+                <g>
+                    <path d="M 685 286 H 864 V 365 H 705 Z" fill="url(#platformRightGrad)" stroke="#10b981" stroke-opacity="0.5" stroke-width="1.8" />
+                    <!-- Glowing Top Rim -->
+                    <line x1="685" y1="286" x2="864" y2="286" stroke="#10b981" stroke-width="3" stroke-linecap="round" />
+                    <!-- Anchor Pylon -->
+                    <rect x="698" y="254" width="26" height="32" rx="6" fill="#0f172a" stroke="#10b981" stroke-width="1.8" />
+                    <circle cx="711" cy="270" r="4" fill="#10b981" filter="url(#neonGlow)" />
+                </g>
+
+                <!-- =================================================================== -->
+                <!-- 2. THE SUSPENSION LIGHT-BRIDGE (THE CORE VISUAL METAPHOR)           -->
+                <!-- =================================================================== -->
+                <g>
+                    <!-- Under-Bridge Structural Arch Rib -->
+                    <path d="M 196 286 Q 450 342 704 286" fill="none" stroke="#1e293b" stroke-width="4" />
+                    <path d="M 196 286 Q 450 342 704 286" fill="none" stroke="url(#bridgeDeckGrad)" stroke-width="1.8" stroke-opacity="0.65" />
+
+                    <!-- Vertical Suspension Struts Connecting Deck to Arch -->
+                    <line x1="270" y1="274" x2="270" y2="303" stroke="#38bdf8" stroke-opacity="0.35" stroke-width="1.5" />
+                    <line x1="360" y1="266" x2="360" y2="312" stroke="#22d3ee" stroke-opacity="0.45" stroke-width="1.5" />
+                    <line x1="450" y1="263" x2="450" y2="314" stroke="#22d3ee" stroke-opacity="0.55" stroke-width="1.5" />
+                    <line x1="540" y1="266" x2="540" y2="312" stroke="#10b981" stroke-opacity="0.45" stroke-width="1.5" />
+                    <line x1="630" y1="274" x2="630" y2="303" stroke="#10b981" stroke-opacity="0.35" stroke-width="1.5" />
+
+                    <!-- Main Luminous Bridge Deck Curve -->
+                    <path d="M 196 278 Q 450 250 704 278" fill="none" stroke="#0f172a" stroke-width="12" stroke-linecap="round" />
+                    <path d="M 196 278 Q 450 250 704 278" fill="none" stroke="url(#bridgeDeckGrad)" stroke-width="3.2" stroke-linecap="round" filter="url(#neonGlow)" />
+                    <path d="M 196 278 Q 450 250 704 278" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="1.5" stroke-linecap="round" class="animate-bridge-dash" />
+
+                    <!-- 5 Glowing Energy Stepping-Stone Tiles Along the Bridge -->
+                    <rect x="252" y="266" width="36" height="8" rx="4" fill="#38bdf8" class="animate-seg-1" transform="rotate(-5 270 270)" />
+                    <rect x="342" y="259" width="36" height="8" rx="4" fill="#22d3ee" class="animate-seg-2" transform="rotate(-2.5 360 263)" />
+                    <rect x="432" y="256" width="36" height="8" rx="4" fill="#2dd4bf" class="animate-seg-3" />
+                    <rect x="522" y="259" width="36" height="8" rx="4" fill="#10b981" class="animate-seg-4" transform="rotate(2.5 540 263)" />
+                    <rect x="612" y="266" width="36" height="8" rx="4" fill="#34d399" class="animate-seg-5" transform="rotate(5 630 270)" />
+
+                    <!-- Animated Learner Energy Orbs Crossing the Bridge from Left to Right -->
+                    <circle r="5.5" fill="#38bdf8" filter="url(#neonGlow)">
+                        <animateMotion dur="3.2s" repeatCount="indefinite" path="M 196 272 Q 450 244 704 272" />
                     </circle>
-                    <circle r="4.5" fill="#10b981">
-                        <animateMotion dur="2.4s" repeatCount="indefinite" begin="1.2s" path="M 125 85 L 380 85 L 630 85" />
+                    <circle r="5.5" fill="#34d399" filter="url(#neonGlow)">
+                        <animateMotion dur="3.2s" begin="1.6s" repeatCount="indefinite" path="M 196 272 Q 450 244 704 272" />
                     </circle>
-                </svg>
-            </div>
+                </g>
+
+                <!-- =================================================================== -->
+                <!-- 3. FLYING CYBER-ROBOT HOVERING OVER THE BRIDGE & POWERING IT        -->
+                <!-- =================================================================== -->
+                <g class="animate-cyber-float" style="transform-origin: 450px 115px;">
+                    <!-- Downward Energy Projection Beam Powering the Bridge Deck -->
+                    <polygon points="442,145 330,264 570,264 458,145" fill="url(#bridgeBeamDown)" />
+
+                    <!-- Forward X-Ray Vision Cone Illuminating the Right-Side Fortress -->
+                    <polygon points="512,92 675,112 675,256 512,112" fill="url(#xrayConeGrad)" />
+                    <line x1="512" y1="92" x2="675" y2="112" stroke="#22d3ee" stroke-opacity="0.35" stroke-width="1.2" stroke-dasharray="5 5" />
+                    <line x1="512" y1="112" x2="675" y2="256" stroke="#10b981" stroke-opacity="0.35" stroke-width="1.2" stroke-dasharray="5 5" />
+
+                    <!-- Jetpack Thruster Flame -->
+                    <path d="M 406 142 L 426 142 L 421 186 Q 416 196 411 186 Z" fill="url(#thrusterGrad)" class="animate-thruster" />
+
+                    <!-- Jetpack Backpack -->
+                    <rect x="402" y="80" width="24" height="62" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="2" />
+                    <rect x="407" y="92" width="6" height="26" rx="3" fill="#22d3ee" opacity="0.7" />
+
+                    <!-- Robot Torso / Cyber Chassis -->
+                    <path d="M 422 86 C 422 70, 482 70, 482 86 L 488 142 C 488 152, 418 152, 418 142 Z" fill="url(#suitGrad)" stroke="#334155" stroke-width="2" />
+                    <!-- Chest Bridge-Core Emblem -->
+                    <polygon points="453,98 463,110 453,122 443,110" fill="none" stroke="#22d3ee" stroke-width="2" />
+                    <circle cx="453" cy="110" r="3" fill="#10b981" />
+
+                    <!-- Hovering Legs (Zero-Gravity Pose) -->
+                    <path d="M 434 146 L 424 180 C 422 187, 434 190, 438 182 L 448 150" fill="#0f172a" stroke="#334155" stroke-width="2" stroke-linecap="round" />
+                    <path d="M 462 146 L 474 176 C 477 183, 488 179, 484 171 L 474 146" fill="#0f172a" stroke="#334155" stroke-width="2" stroke-linecap="round" />
+
+                    <!-- Robot Helmet -->
+                    <circle cx="455" cy="48" r="34" fill="#0f172a" stroke="#38bdf8" stroke-width="2.2" />
+                    <!-- Antenna -->
+                    <line x1="442" y1="15" x2="436" y2="0" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" />
+                    <circle cx="436" cy="-2" r="4" fill="#10b981" filter="url(#neonGlow)" />
+
+                    <!-- Glowing X-Ray Visor -->
+                    <rect x="444" y="33" width="44" height="24" rx="12" fill="url(#visorGrad)" filter="url(#neonGlow)" />
+                    <path d="M 452 39 L 476 39" stroke="#ffffff" stroke-opacity="0.75" stroke-width="2.5" stroke-linecap="round" />
+
+                    <!-- Extended Arm Holding Scanner Emitter -->
+                    <path d="M 476 96 L 505 99" stroke="#334155" stroke-width="10" stroke-linecap="round" />
+                    <rect x="499" y="89" width="17" height="21" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="2" />
+                    <circle cx="512" cy="100" r="4" fill="#22d3ee" filter="url(#neonGlow)" />
+                </g>
+
+                <!-- =================================================================== -->
+                <!-- 4. FLOATING CONCEPTUAL NODES (SHIELD & CODE)                        -->
+                <!-- =================================================================== -->
+                <!-- Floating Shield Node (Upper Left) -->
+                <g class="animate-orb-1">
+                    <rect x="245" y="72" width="44" height="44" rx="12" fill="#0f172a" stroke="#1e293b" stroke-width="1.5" />
+                    <path d="M 267 82 L 279 87 V 95 C 279 102 273 107 267 109 C 261 107 255 102 255 95 V 87 Z" fill="none" stroke="#10b981" stroke-width="2" />
+                    <path d="M 262 95 L 266 99 L 273 91" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </g>
+
+                <!-- Floating Code Bracket Node (Mid Left) -->
+                <g class="animate-orb-2">
+                    <rect x="142" y="128" width="44" height="44" rx="12" fill="#0f172a" stroke="#1e293b" stroke-width="1.5" />
+                    <path d="M 159 142 L 152 150 L 159 158 M 169 142 L 176 150 L 169 158" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </g>
+
+                <!-- =================================================================== -->
+                <!-- 5. RIGHT-SIDE DESTINATION: X-RAYED LAB TARGET CORE                  -->
+                <!-- =================================================================== -->
+                <g>
+                    <circle cx="755" cy="185" r="118" fill="url(#targetAura)" />
+                    <circle cx="755" cy="185" r="106" fill="none" stroke="#10b981" stroke-opacity="0.22" stroke-width="1.5" stroke-dasharray="10 8" class="animate-ring-spin" style="transform-origin: 755px 185px;" />
+
+                    <!-- Outer Target Shell -->
+                    <rect x="675" y="110" width="160" height="150" rx="20" fill="#090d16" stroke="#10b981" stroke-opacity="0.6" stroke-width="2" />
+
+                    <!-- Interior X-Ray Revealed Architecture -->
+                    <g clip-path="url(#xrayBoxClip)">
+                        <path d="M 675 148 H 835 M 675 185 H 835 M 675 222 H 835" stroke="#1e293b" stroke-width="1" />
+                        <path d="M 715 110 V 260 M 795 110 V 260" stroke="#1e293b" stroke-width="1" />
+
+                        <!-- Abstract Code Syntax Bars -->
+                        <rect x="692" y="126" width="46" height="6" rx="3" fill="#38bdf8" opacity="0.75" />
+                        <rect x="744" y="126" width="28" height="6" rx="3" fill="#334155" />
+
+                        <rect x="702" y="140" width="68" height="6" rx="3" fill="#10b981" opacity="0.85" />
+                        <rect x="776" y="140" width="36" height="6" rx="3" fill="#334155" />
+
+                        <!-- Central Unlocked Target Core / Solved Emblem -->
+                        <g class="animate-core-glow" style="transform-origin: 755px 186px;">
+                            <polygon points="755,156 781,171 781,201 755,216 729,201 729,171" fill="#052e16" stroke="#10b981" stroke-width="2.2" filter="url(#neonGlow)" />
+                            <path d="M 745 186 L 752 193 L 767 177" fill="none" stroke="#34d399" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                        </g>
+
+                        <!-- Bottom Logic Bars -->
+                        <rect x="692" y="234" width="62" height="6" rx="3" fill="#22d3ee" opacity="0.65" />
+                        <rect x="760" y="234" width="54" height="6" rx="3" fill="#10b981" opacity="0.65" />
+
+                        <!-- Sweeping Horizontal X-Ray Laser Line -->
+                        <g class="animate-xray-sweep">
+                            <rect x="675" y="182" width="160" height="7" fill="#22d3ee" opacity="0.18" />
+                            <line x1="675" y1="185" x2="835" y2="185" stroke="#22d3ee" stroke-width="2.2" filter="url(#neonGlow)" />
+                        </g>
+                    </g>
+
+                    <!-- Corner Brackets Around Target Box -->
+                    <path d="M 667 126 V 102 H 691" fill="none" stroke="#22d3ee" stroke-width="2.2" stroke-linecap="round" />
+                    <path d="M 843 126 V 102 H 819" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" />
+                    <path d="M 667 244 V 268 H 691" fill="none" stroke="#22d3ee" stroke-width="2.2" stroke-linecap="round" />
+                    <path d="M 843 244 V 268 H 819" fill="none" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" />
+                </g>
+            </svg>
         </div>
     </section>
 
